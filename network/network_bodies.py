@@ -4,7 +4,7 @@ from utils.config import *
 import numpy as np
 
 
-class CategoricalNet():
+class CategoricalNet:
     def __init__(self, config):
         self.config = config
         self.num_atoms = config.Categorical_n_atoms
@@ -16,28 +16,33 @@ class CategoricalNet():
                                                         save_weights_only=False,
                                                         mode='auto', period=1)
 
+        self.net_model = None
+
     def nn_model(self):
-        net_model = tf.keras.models.Sequential([
-            tf.keras.layers.Input(shape=self.input_dim),
+        self.net_model = tf.keras.models.Sequential([
             # output layer
             tf.keras.layers.Dense(units=self.output_dim,
                                   activation='softmax',
                                   use_bias=True,
+                                  input_shape=self.input_dim,
                                   kernel_initializer='random_uniform',
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-2, 1e-2)
-                                  )
+                                  ),
+
+            # processing layers ==> reshape and softmax, no training variables
+            tf.keras.layers.Reshape((self.action_dim, self.num_atoms)),
+            tf.keras.layers.Softmax(axis=-1)
         ])
 
-        return net_model
+        return self.net_model
 
 
 if __name__ == '__main__':
     C = Config()
 
-    x = np.random.randn(10, 4)
+    x = np.random.randn(30, 1, 4)
     cat = CategoricalNet(config=C)
     cat_nn = cat.nn_model()
     cat_nn.summary()
     predictions = cat_nn.predict(x)
 
-    print(predictions)
