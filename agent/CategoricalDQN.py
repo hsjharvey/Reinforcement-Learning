@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from utils import policies, config
+from utils import policies, config, replay_fn
 from network import network_bodies
 import numpy as np
 import tensorflow as tf
@@ -35,22 +35,36 @@ class CategoricalDQNAgent:
             current_state = self.envs.reset()
 
             for step in range(self.steps):
+
                 action_prob = self.actor_network.predict(np.array(current_state).reshape(1, 1, 4))
                 action_value = np.dot(np.array(action_prob), self.atoms)
                 action = policies.epsilon_greedy(action_value=action_value[0])
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 
-                self.replay_buffer.append([current_state, action, next_state, reward, done])
+                self.replay_buffer.append([current_state.reshape(self.config.input_dim).tolist(), action,
+                                           next_state.reshape(self.config.input_dim).tolist(), reward, done])
 
                 if len(list(self.replay_buffer)) == self.replay_buffer_size:
-                    print(list(self.replay_buffer)[2])
-                    exp = np.random.choice(list(self.replay_buffer), size=self.batch_size)
-                    next_states = exp[:, 2]
-                    prob_next = self.target_network.predict(next_states)
-                    print(prob_next)
+                    next_states, rewards, terminals = replay_fn.uniform_random_replay(self.replay_buffer,
+                                                                                      self.batch_size)
+                    prob_next = self.target_network.predict(np.asarray(next_states))
 
-                    # rewards = exp[:, 3]
+                    print('=' * 64)
+                    print(np.array(prob_next).shape)
+                    print(self.atoms.shape)
+                    q_next = np.dot(np.array(prob_next), self.atoms)
+                    a_next = np.argmax(q_next, axis=1)
+
+
+                    print(rewards.shape)
+                    print(terminals.shape)
+                    print(self.atoms.shape)
+                    print(self.config.discount_rate * (1 - terminals))
+                    atoms_next = rewards + self.config.discount_rate * (1 - terminals) * self.atoms
+                    print(atoms_next)
+
+                current_state = next_state
 
     def eval_step(self):
         pass
