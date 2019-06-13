@@ -55,7 +55,9 @@ class CategoricalDQNAgent:
                     print(self.atoms.shape)
                     q_next = np.dot(np.array(prob_next), self.atoms)
                     action_next = np.argmax(q_next, axis=1)
-                    prob_next = np.take(prob_next)
+                    print(action_next.shape)
+                    prob_next = prob_next[np.arange(self.batch_size), action_next, :]
+                    print('prob_next {}'.format(prob_next.shape))
 
                     print(q_next.shape)
                     print(rewards.shape)
@@ -76,6 +78,7 @@ class CategoricalDQNAgent:
                     l = np.floor(b)
                     u = np.ceil(b)
                     d_m_l = (u + (l == u) - b)
+                    print('dml {}'.format(d_m_l.shape))
 
                 current_state = next_state
 
