@@ -54,15 +54,28 @@ class CategoricalDQNAgent:
                     print(np.array(prob_next).shape)
                     print(self.atoms.shape)
                     q_next = np.dot(np.array(prob_next), self.atoms)
-                    a_next = np.argmax(q_next, axis=1)
+                    action_next = np.argmax(q_next, axis=1)
+                    prob_next = np.take(prob_next)
 
-
+                    print(q_next.shape)
                     print(rewards.shape)
                     print(terminals.shape)
                     print(self.atoms.shape)
                     print(self.config.discount_rate * (1 - terminals))
-                    atoms_next = rewards + self.config.discount_rate * (1 - terminals) * self.atoms
-                    print(atoms_next)
+                    rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.config.Categorical_n_atoms))
+                    print(rewards.shape)
+
+                    discount_rate = self.config.discount_rate * (1 - terminals)
+                    atoms_next = rewards + np.dot(discount_rate.reshape(self.batch_size, 1),
+                                                  self.atoms.reshape(1, self.config.Categorical_n_atoms))
+
+                    atoms_next = np.clip(atoms_next, self.config.Categorical_Vmin, self.config.Categorical_Vmax)
+
+                    b = (atoms_next - self.config.Categorical_Vmin) / self.delta_z
+
+                    l = np.floor(b)
+                    u = np.ceil(b)
+                    d_m_l = (u + (l == u) - b)
 
                 current_state = next_state
 
