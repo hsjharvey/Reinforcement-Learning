@@ -21,4 +21,4 @@ def uniform_random_replay(replay_buffer, batch_size):
         rewards.append(replay_buffer[i][3])
         done.append(replay_buffer[i][4])
 
-    return np.asarray(next_states), np.asarray(rewards), np.array(done)
+    return np.asarray(current_states), np.asarray(actions), np.asarray(next_states), np.asarray(rewards), np.array(done)

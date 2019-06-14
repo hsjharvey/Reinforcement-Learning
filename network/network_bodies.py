@@ -14,8 +14,9 @@ class CategoricalNet:
         self.check = tf.keras.callbacks.ModelCheckpoint('results/harvey.model',
                                                         monitor='val_acc', verbose=1, save_best_only=True,
                                                         save_weights_only=False,
-                                                        mode='auto', period=1)
+                                                        mode='auto')
 
+        self.optimizer = None
         self.net_model = None
 
     def nn_model(self):
@@ -23,7 +24,7 @@ class CategoricalNet:
             # output layer
             tf.keras.layers.Dense(units=self.output_dim,
                                   activation='softmax',
-                                  use_bias=True,
+                                  use_bias=False,
                                   input_shape=self.input_dim,
                                   kernel_initializer='random_uniform',
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-2, 1e-2)
@@ -34,7 +35,17 @@ class CategoricalNet:
             tf.keras.layers.Softmax(axis=-1)
         ])
 
+        self.optimizer = tf.keras.optimizers.Adam(1e-2)
+
+        self.net_model.compile(
+            loss=self.customize_loss_fn,
+            opimizer=self.optimizer
+        )
+
         return self.net_model
+
+    def customize_loss_fn(self, y_predict, y_target):
+        return -(np.log(y_predict) * y_target).sum(-1).mean()
 
 
 if __name__ == '__main__':
@@ -45,4 +56,3 @@ if __name__ == '__main__':
     cat_nn = cat.nn_model()
     cat_nn.summary()
     predictions = cat_nn.predict(x)
-
