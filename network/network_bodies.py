@@ -35,17 +35,13 @@ class CategoricalNet:
             tf.keras.layers.Softmax(axis=-1)
         ])
 
-        self.optimizer = tf.keras.optimizers.Adam(1e-2)
-
         self.net_model.compile(
-            loss=self.customize_loss_fn,
-            opimizer=self.optimizer
+            loss='categorical_crossentropy',
+            optimizer=tf.keras.optimizers.Adam(1e-2)
+
         )
 
         return self.net_model
-
-    def customize_loss_fn(self, y_predict, y_target):
-        return -(np.log(y_predict) * y_target).sum(-1).mean()
 
 
 if __name__ == '__main__':

@@ -67,20 +67,28 @@ class CategoricalDQNAgent:
 
                     b = (atoms_next - self.config.Categorical_Vmin) / self.delta_z
 
-                    l = np.floor(b).astype(int)
-                    u = np.ceil(b).astype(int)
+                    l, u = np.floor(b).astype(int), np.ceil(b).astype(int)
+
                     d_m_l = (u + (l == u) - b) * prob_next
                     d_m_u = (b - l) * prob_next
 
-                    target_histo = np.zeros(prob_next.shape)
+                    # target_histo = np.zeros(prob_next.shape)
+                    #
+                    # for i in range(self.batch_size):
+                    #     np.add.at(target_histo[i], l[i], d_m_l[i])
+                    #     np.add.at(target_histo[i], l[i], d_m_u[i])
+
+                    target_histo = self.actor_network.predict(current_states)
+
                     for i in range(self.batch_size):
-                        np.add.at(target_histo[i], l[i], d_m_l[i])
-                        np.add.at(target_histo[i], l[i], d_m_u[i])
+                        target_histo[i][action_next[i]] = 0.0  # clear the histogram that needs to be updated
+                        np.add.at(target_histo[i][action_next[i]], l[i], d_m_l[i])  # update d_m_l
+                        np.add.at(target_histo[i][action_next[i]], l[i], d_m_u[i])  # update d_m_u
 
-                    log_prob = np.log(self.actor_network.predict(current_states))
-                    log_prob = log_prob[np.arange(self.batch_size), actions, :]
+                    # log_prob = np.log(self.actor_network.predict(current_states))
+                    # log_prob = log_prob[np.arange(self.batch_size), actions, :]
 
-                    self.actor_network.fit(x=current_states, y=prob_next)
+                    self.actor_network.train_on_batch(x=current_states, y=target_histo)
 
                     # updates = optimizer.get_updates(loss=loss_fn, params=self.actor_network.trainable_variables)
                     # self.weights_update(loss_fn, self.actor_network, optimizer)
