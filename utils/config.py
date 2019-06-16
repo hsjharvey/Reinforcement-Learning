@@ -24,3 +24,5 @@ class Config:
         self.replay_buffer_size = 100  # must > batch size
         self.discount_rate = 0.9
         self.learning_rate = 0.1
+
+        self.weights_update_frequency = 100
