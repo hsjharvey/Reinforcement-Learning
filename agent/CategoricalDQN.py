@@ -112,8 +112,10 @@ class CategoricalDQNAgent:
 
     def transition(self):
         """
-        At this stage, the agent simple just play and record
+        At this stage, the agent simply play and record
         [current_state, action, reward, next_state, done]
+        Updating the weights of the neural network happens
+        every single time the replay buffer size is reached.
         done: boolean, whether the game has end or not
         :return:
         """

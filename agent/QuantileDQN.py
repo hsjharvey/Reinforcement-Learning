@@ -35,8 +35,14 @@ class CategoricalDQNAgent:
         self.replay_buffer_size = config.replay_buffer_size
         self.replay_buffer = deque()
 
-    def trainsition(self):
-        pass
+    def transition(self):
+        for each_ep in range(self.episodes):
+            current_state = self.envs.reset()
+
+            for step in range(self.steps):
+                self.total_steps += 1
+
+                
 
     def train_by_replay(self):
         pass
