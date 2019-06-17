@@ -31,3 +31,4 @@ class Config:
         self.Categorical_n_atoms = 51
 
         # Quantile Regression DQN parameters
+        self.num_quantiles = 30

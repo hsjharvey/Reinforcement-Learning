@@ -10,7 +10,6 @@ import time
 
 class CategoricalDQNAgent:
     def __init__(self, config):
-
         self.config = config
 
         self.input_dim = config.input_dim  # neural network input dimension
@@ -109,7 +108,7 @@ class CategoricalDQNAgent:
             np.add.at(target_histo[i][action_next[i]], l[i], d_m_u[i])  # update d_m_u
 
         loss = self.actor_network.fit(x=current_states, y=target_histo, verbose=2)  # update actor network weights
-        return loss['loss']
+        return loss
 
     def transition(self):
         """
