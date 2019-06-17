@@ -6,23 +6,28 @@ class Config:
     device = tf.device('/gpu:0')
 
     def __init__(self):
+        # environment parameters
+        self.input_dim = (1, 4)  # input feature dimension
+        self.action_dim = 2  # agent action dimension (generally consider part of the environment)
+
+        self.episodes = 1000
+        self.steps = 500  # note that OpenAI gym has max environment steps (e.g. max_step = 200 for CartPole)
+
+        # general RL agent parameters
+        self.batch_size = 32  # soze
+        self.replay_buffer_size = 100  # must > batch size
+        assert self.replay_buffer_size > self.batch_size
+
+        self.stop_explore = 100
+
+        self.discount_rate = 0.9  # constant
+        self.learning_rate = 0.2  # constant
+
+        self.weights_update_frequency = 50
+
         # categorical DQN parameters
         self.Categorical_Vmin = -10
         self.Categorical_Vmax = 10
         self.Categorical_n_atoms = 51
 
-        # environment
-        self.input_dim = (1, 4)
-        self.action_dim = 2
-
-        self.episodes = 1000
-        self.steps = 1000
-
-
-        # agent
-        self.batch_size = 32
-        self.replay_buffer_size = 100  # must > batch size
-        self.discount_rate = 0.9
-        self.learning_rate = 0.1
-
-        self.weights_update_frequency = 100
+        # Quantile Regression DQN parameters

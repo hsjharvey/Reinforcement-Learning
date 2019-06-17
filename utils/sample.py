@@ -61,21 +61,3 @@ def epsilon_greedy(action_prob):
 
 optimizer = tf.keras.optimizers.Adam(0.001)
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
-
-
-@tf.function
-def train_step(inputs, labels):
-    with tf.GradientTape() as tape:
-        predictions = model(inputs, training=True)
-        regularization_loss = tf.math.add_n(model.losses)
-        pred_loss = loss_fn(labels, predictions)
-        total_loss = pred_loss + regularization_loss
-
-    gradients = tape.gradient(total_loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-
-
-for epoch in range(NUM_EPOCHS):
-    for inputs, labels in train_data:
-        train_step(inputs, labels)
-    print("Finished epoch", epoch)
