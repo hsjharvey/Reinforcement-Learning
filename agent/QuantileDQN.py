@@ -15,13 +15,7 @@ class CategoricalDQNAgent:
         self.input_dim = config.input_dim  # neural network input dimension
 
         self.quantile_weights = 1.0 / float(config.num_quantiles)
-        self.cum_density = np.arange(2 * np.arange(config.num_quantiles) + 1) / (2.0 * config.num_quantiles)
-
-        self.atoms = np.linspace(
-            config.Categorical_Vmin,
-            config.Categorical_Vmax,
-            config.Categorical_n_atoms,
-        )  # Z
+        self.cum_density = (2 * np.arange(config.num_quantiles) + 1) / (2.0 * config.num_quantiles)
 
         self.envs = None
         self.actor_network = None
