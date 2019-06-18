@@ -2,7 +2,6 @@
 import tensorflow as tf
 from utils.config import *
 import numpy as np
-import keras.backend as k
 
 
 class CategoricalNet:
@@ -71,8 +70,13 @@ class QuantileNet_new:
         output_layers = tf.keras.layers.Reshape((self.action_dim, self.num_quantiles))(output_layers)
         output_layers = tf.keras.layers.Softmax(axis=-1)(output_layers)
 
-        output_layer_2 = tf.reduce_mean(output_layers, axis=-1)
-        output_layer_2 = tf.reduce_max(output_layer_2, axis=-1)
+        print(output_layers)
+        idx = tf.argmax(output_layers, axis=2)
+
+        print(idx)
+        print(idx.shape[1])
+        output_layer_2 = tf.gather_nd(params=output_layers, indices=idx)
+        print(output_layer_2)
 
         self.net_model = tf.keras.models.Model(inputs=input_layer, outputs=[output_layers, output_layer_2])
 
