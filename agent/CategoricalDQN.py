@@ -45,6 +45,56 @@ class CategoricalDQNAgent:
                                                         save_weights_only=False,
                                                         mode='auto')
 
+    def transition(self):
+        """
+        At this stage, the agent simply play and record
+        [current_state, action, reward, next_state, done]
+        Updating the weights of the neural network happens
+        every single time the replay buffer size is reached.
+        done: boolean, whether the game has end or not
+        :return:
+        """
+        for each_ep in range(self.episodes):
+            current_state = self.envs.reset()
+
+            for step in range(self.steps):
+                self.total_steps += 1
+
+                # reshape the input state to a tensor ===> Network ====> action probabilities
+                # size = (1, action dimension, number of atoms)
+                # e.g. size = (1, 2, 51)
+                action_prob = self.actor_network.predict(
+                    np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
+
+                # calculate action value (Q-value)
+                action_value = np.dot(np.array(action_prob), self.atoms)
+                action = policies.epsilon_greedy(action_values=action_value[0],
+                                                 episode=each_ep,
+                                                 stop_explore=self.config.stop_explore)
+
+                next_state, reward, done, _ = self.envs.step(action=action)
+
+                # record the history to replay buffer
+                self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
+                                           next_state.reshape(self.input_dim).tolist(), reward, done])
+
+                # when we collect certain number of batches, perform replay and update
+                # the weights in actor network and clear the replay buffer
+                if len(list(self.replay_buffer)) == self.replay_buffer_size:
+                    loss = self.train_by_replay()
+                    self.replay_buffer = deque()
+
+                # for certain period, we copy the actor network weights to the target network
+                if self.total_steps > self.config.weights_update_frequency:
+                    self.target_network.set_weights(self.actor_network.get_weights())
+
+                # if episode is finished, break the inner loop
+                # otherwise, continue
+                if done:
+                    break
+                else:
+                    current_state = next_state
+
     def train_by_replay(self):
         """
         TD update by replay the history.
@@ -99,7 +149,6 @@ class CategoricalDQNAgent:
         # P(x, a*): size = (32, 1, 51) and P(x(t+1), a*): size = (32, 1, 51), i.e. only for optimal actions
         # However, the network generates P(x, a): size = (32, 2, 51), i.e. for all actions
         # Therefore, I create a tensor with zeros (size = (32, 2, 51)) and update only the probability histogram
-        # so that the calculated cross entropy loss is accurate
         target_histo = np.zeros(shape=(self.batch_size, self.config.action_dim, self.n_atoms))
 
         for i in range(self.batch_size):
@@ -109,56 +158,6 @@ class CategoricalDQNAgent:
 
         loss = self.actor_network.fit(x=current_states, y=target_histo, verbose=2)  # update actor network weights
         return loss
-
-    def transition(self):
-        """
-        At this stage, the agent simply play and record
-        [current_state, action, reward, next_state, done]
-        Updating the weights of the neural network happens
-        every single time the replay buffer size is reached.
-        done: boolean, whether the game has end or not
-        :return:
-        """
-        for each_ep in range(self.episodes):
-            current_state = self.envs.reset()
-
-            for step in range(self.steps):
-                self.total_steps += 1
-
-                # reshape the input state to a tensor ===> Network ====> action probabilities
-                # size = (1, action dimension, number of atoms)
-                # e.g. size = (1, 2, 51)
-                action_prob = self.actor_network.predict(
-                    np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
-
-                # calculate action value (Q-value)
-                action_value = np.dot(np.array(action_prob), self.atoms)
-                action = policies.epsilon_greedy(action_values=action_value[0],
-                                                 episode=each_ep,
-                                                 stop_explore=self.config.stop_explore)
-
-                next_state, reward, done, _ = self.envs.step(action=action)
-
-                # record the history to replay buffer
-                self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
-                                           next_state.reshape(self.input_dim).tolist(), reward, done])
-
-                # when we collect certain number of batches, perform replay and update
-                # the weights in actor network and clear the replay buffer
-                if len(list(self.replay_buffer)) == self.replay_buffer_size:
-                    loss = self.train_by_replay()
-                    self.replay_buffer = deque()
-
-                # for certain period, we copy the actor network weights to the target network
-                if self.total_steps > self.config.weights_update_frequency:
-                    self.target_network.set_weights(self.actor_network.get_weights())
-
-                # if episode is finished, break the inner loop
-                # otherwise, continue
-                if done:
-                    break
-                else:
-                    current_state = next_state
 
     def eval_step(self, render=True):
         for each_ep in range(100):
