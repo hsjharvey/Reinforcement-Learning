@@ -33,6 +33,7 @@ class QuantileDQNAgent:
         self.replay_buffer = deque()
 
         self.check = 0
+        self.best_max = 0
 
     def transition(self):
         for each_ep in range(self.episodes):
@@ -68,7 +69,8 @@ class QuantileDQNAgent:
                     self.replay_buffer = deque()
 
                 # for certain period, we copy the actor network weights to the target network
-                if self.total_steps % self.config.weights_update_frequency == 0:
+                if self.check >= self.best_max:
+                    self.best_max = self.check
                     self.target_network.set_weights(self.actor_network.get_weights())
 
                 # if episode is finished, break the inner loop
@@ -103,8 +105,13 @@ class QuantileDQNAgent:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
+            print('max_step: {}'.format(self.check))
+            self.check = 0
+
             for step in range(200):
-                quantile_values, _ = self.actor_network.predict(
+                self.check += 1
+
+                quantile_values, _ = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)
 

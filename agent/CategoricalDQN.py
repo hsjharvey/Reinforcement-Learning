@@ -45,6 +45,7 @@ class CategoricalDQNAgent:
                                                         save_weights_only=False,
                                                         mode='auto')
         self.check = 0
+        self.best_max = 0
 
     def transition(self):
         """
@@ -90,7 +91,8 @@ class CategoricalDQNAgent:
                     self.replay_buffer = deque()
 
                 # for certain period, we copy the actor network weights to the target network
-                if self.total_steps % self.config.weights_update_frequency == 0:
+                if self.check >= self.best_max:
+                    self.best_max = self.check
                     self.target_network.set_weights(self.actor_network.get_weights())
 
                 # if episode is finished, break the inner loop
@@ -167,8 +169,13 @@ class CategoricalDQNAgent:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
+            print('max_step: {}'.format(self.check))
+            self.check = 0
+
             for step in range(200):
-                action_prob = self.actor_network.predict(
+                self.check += 1
+
+                action_prob = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 action_value = np.dot(np.array(action_prob), self.atoms)
