@@ -44,6 +44,7 @@ class CategoricalDQNAgent:
                                                         save_best_only=True,
                                                         save_weights_only=False,
                                                         mode='auto')
+        self.check = 0
 
     def transition(self):
         """
@@ -56,9 +57,12 @@ class CategoricalDQNAgent:
         """
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
+            print('max_step: {}'.format(self.check))
+            self.check = 0
 
             for step in range(self.steps):
                 self.total_steps += 1
+                self.check += 1
 
                 # reshape the input state to a tensor ===> Network ====> action probabilities
                 # size = (1, action dimension, number of atoms)
@@ -68,6 +72,7 @@ class CategoricalDQNAgent:
 
                 # calculate action value (Q-value)
                 action_value = np.dot(np.array(action_prob), self.atoms)
+
                 action = policies.epsilon_greedy(action_values=action_value[0],
                                                  episode=each_ep,
                                                  stop_explore=self.config.stop_explore)
@@ -85,7 +90,7 @@ class CategoricalDQNAgent:
                     self.replay_buffer = deque()
 
                 # for certain period, we copy the actor network weights to the target network
-                if self.total_steps > self.config.weights_update_frequency:
+                if self.total_steps % self.config.weights_update_frequency == 0:
                     self.target_network.set_weights(self.actor_network.get_weights())
 
                 # if episode is finished, break the inner loop
@@ -130,7 +135,6 @@ class CategoricalDQNAgent:
         discount_rate = self.config.discount_rate * (1 - terminals)
         atoms_next = rewards + np.dot(discount_rate.reshape(self.batch_size, 1),
                                       self.atoms.reshape(1, self.n_atoms))
-
         # constrain atoms next to be within Vmin and Vmax
         atoms_next = np.clip(atoms_next, self.vmin, self.vmax)
 
@@ -163,18 +167,17 @@ class CategoricalDQNAgent:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
-            if render:
-                self.envs.render(mode=['human'])
-                time.sleep(0.15)
-
             for step in range(200):
                 action_prob = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 action_value = np.dot(np.array(action_prob), self.atoms)
-                action = np.argmax(action_value[0], axis=0)
+                action = np.argmax(action_value[0])
 
                 next_state, reward, done, _ = self.envs.step(action=action)
+
+                if render:
+                    self.envs.render(mode=['human'])
 
                 if done:
                     break

@@ -32,12 +32,18 @@ class QuantileDQNAgent:
         self.replay_buffer_size = config.replay_buffer_size
         self.replay_buffer = deque()
 
+        self.check = 0
+
     def transition(self):
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
+            print('max_step: {}'.format(self.check))
+            self.check = 0
+
             for step in range(self.steps):
                 self.total_steps += 1
+                self.check += 1
 
                 # neural network returns quantile value
                 # action value (Q): take the mean of the quantile value for each action
@@ -62,7 +68,7 @@ class QuantileDQNAgent:
                     self.replay_buffer = deque()
 
                 # for certain period, we copy the actor network weights to the target network
-                if self.total_steps > self.config.weights_update_frequency:
+                if self.total_steps % self.config.weights_update_frequency == 0:
                     self.target_network.set_weights(self.actor_network.get_weights())
 
                 # if episode is finished, break the inner loop
@@ -90,14 +96,37 @@ class QuantileDQNAgent:
         discount_rate = self.config.discount_rate * (1 - terminals)
         discount_rate = np.tile(discount_rate.reshape(self.batch_size, 1), (1, self.n_quantiles))
         quantiles_next = rewards + discount_rate * quantiles_next
-        print(quantiles_next.shape)
 
-        self.base_network.action = actions
-        self.actor_network.fit(x=current_states, y=quantiles_next)
+        self.actor_network.fit(x=current_states, y=quantiles_next, verbose=1)
+
+    def eval_step(self, render=True):
+        for each_ep in range(100):
+            current_state = self.envs.reset()
+
+            for step in range(200):
+                quantile_values, _ = self.actor_network.predict(
+                    np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
+                action_value = quantile_values.mean(-1)
+
+                action = np.argmax(action_value[0])
+
+                next_state, reward, done, _ = self.envs.step(action=action)
+
+                if render:
+                    self.envs.render(mode=['human'])
+
+                if done:
+                    break
+                else:
+                    current_state = next_state
 
 
 if __name__ == '__main__':
     C = config.Config()
-    quant = QuantileDQNAgent(config=C, base_network=neural_network.QuantileNet_new(config=C))
+    quant = QuantileDQNAgent(config=C, base_network=neural_network.QuantileNet(config=C))
     quant.envs = gym.make('CartPole-v0')
     quant.transition()
+
+    print("finish training")
+    print("evaluating.....")
+    quant.eval_step(render=True)

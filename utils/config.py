@@ -21,14 +21,16 @@ class Config:
         self.stop_explore = 100
 
         self.discount_rate = 0.9  # constant
-        self.learning_rate = 0.2  # constant
+        self.learning_rate = 0.1  # constant
+
+        self.optimizer = tf.keras.optimizers.Adam(1e-2)
 
         self.weights_update_frequency = 50
 
         # categorical DQN parameters
-        self.Categorical_Vmin = -10
+        self.Categorical_Vmin = 0
         self.Categorical_Vmax = 10
-        self.Categorical_n_atoms = 51
+        self.Categorical_n_atoms = 50
 
         # Quantile Regression DQN parameters
-        self.num_quantiles = 30
+        self.num_quantiles = 5
