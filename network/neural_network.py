@@ -19,6 +19,10 @@ class DQNNet:
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=True,
                                               input_shape=self.input_dim,  # input
+                                              kernel_initializer=
+                                              tf.keras.initializers.RandomNormal(mean=0.0,
+                                                                                 stddev=0.05,
+                                                                                 seed=None),
                                               activation='linear',
                                               activity_regularizer=tf.keras.regularizers.l2(1e-3)
                                               )(input_layer)
@@ -57,6 +61,10 @@ class CategoricalNet:
                                   use_bias=True,
                                   input_shape=self.input_dim,  # input
                                   activation='linear',
+                                  kernel_initializer=
+                                  tf.keras.initializers.RandomNormal(mean=0.0,
+                                                                     stddev=0.05,
+                                                                     seed=None),
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                   ),
 
@@ -96,6 +104,10 @@ class QuantileNet:
                                               use_bias=True,
                                               input_shape=self.input_dim,  # input
                                               activation='linear',
+                                              kernel_initializer=
+                                              tf.keras.initializers.RandomNormal(mean=0.0,
+                                                                                 stddev=0.05,
+                                                                                 seed=None),
                                               activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                               )(input_layer)
 
@@ -131,12 +143,14 @@ class QuantileNet:
     def quantile_huber_loss(self, y_true, y_predict):
         diff = y_true - y_predict
 
+        regularization_loss = tf.add_n(self.net_model.losses)
+
         loss = tf.reduce_mean(
             (self.huber_loss(diff) *
              tf.abs(self.cum_density - tf.cast(diff < 0, dtype=tf.float32))),
             axis=0)
 
-        loss = tf.reduce_sum(loss)
+        loss = tf.reduce_sum(loss) + regularization_loss
 
         return loss
 

@@ -23,7 +23,7 @@ class Config:
         self.discount_rate = 0.9  # constant
         self.learning_rate = 0.01  # constant
 
-        self.optimizer = tf.keras.optimizers.Adam(1e-3)
+        self.optimizer = tf.keras.optimizers.RMSprop(1e-2)
 
         self.weights_update_frequency = 50
 
