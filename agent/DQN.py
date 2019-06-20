@@ -8,16 +8,12 @@ import gym
 import time
 
 
-class QuantileDQNAgent:
+class DQN:
     def __init__(self, config, base_network):
         self.base_network = base_network
         self.config = config
 
         self.input_dim = config.input_dim  # neural network input dimension
-
-        self.n_quantiles = config.num_quantiles
-
-        self.quantile_weights = 1.0 / float(config.num_quantiles)
 
         self.envs = None
         self.actor_network = self.base_network.nn_model()
@@ -43,15 +39,10 @@ class QuantileDQNAgent:
             self.check = 0
 
             for step in range(self.steps):
-
-                # neural network returns quantile value
-                # action value (Q): take the mean of the quantile value for each action
-                # since we assume equal size quantiles
-                quantile_values, _ = self.actor_network.predict(
+                action_values, _ = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
-                action_value = quantile_values.mean(-1)
 
-                action = policies.epsilon_greedy(action_values=action_value[0],
+                action = policies.epsilon_greedy(action_values=action_values.reshape(self.config.action_dim),
                                                  episode=each_ep,
                                                  stop_explore=self.config.stop_explore)
 
@@ -87,18 +78,14 @@ class QuantileDQNAgent:
         current_states, actions, next_states, rewards, terminals = \
             replay_fn.uniform_random_replay(self.replay_buffer, self.batch_size)
 
-        quantiles_next, _ = self.target_network.predict(next_states)
-        action_value_next = quantiles_next.mean(-1)
-        action_next = np.argmax(action_value_next, axis=1)
+        action_values, _ = self.target_network.predict(next_states)
+        action_values_next = np.max(action_values, axis=2)
 
-        quantiles_next = quantiles_next[np.arange(self.batch_size), action_next, :]
-
-        rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.n_quantiles))
+        rewards = rewards.reshape(action_values_next.shape)
+        terminals = terminals.reshape((action_values_next.shape))
 
         # TD update
-        discount_rate = self.config.discount_rate * (1 - terminals)
-        discount_rate = np.tile(discount_rate.reshape(self.batch_size, 1), (1, self.n_quantiles))
-        quantiles_next = rewards + discount_rate * quantiles_next
+        quantiles_next = rewards + self.config.discount_rate * action_values_next * (1 - terminals)
 
         self.actor_network.fit(x=current_states, y=quantiles_next, verbose=2)
 
@@ -110,11 +97,9 @@ class QuantileDQNAgent:
             self.check = 0
 
             for step in range(200):
-                quantile_values, _ = self.target_network.predict(
+                action_values, _ = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
-                action_value = quantile_values.mean(-1)
-
-                action = np.argmax(action_value[0])
+                action = np.argmax(action_values.reshape(self.config.action_dim))
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 
@@ -130,7 +115,7 @@ class QuantileDQNAgent:
 
 if __name__ == '__main__':
     C = config.Config()
-    quant = QuantileDQNAgent(config=C, base_network=neural_network.QuantileNet(config=C))
+    quant = DQN(config=C, base_network=neural_network.DQNNet(config=C))
     quant.envs = gym.make('CartPole-v0')
     quant.transition()
 

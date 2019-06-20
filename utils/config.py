@@ -18,19 +18,19 @@ class Config:
         self.replay_buffer_size = 100  # must > batch size
         assert self.replay_buffer_size > self.batch_size
 
-        self.stop_explore = 100
+        self.stop_explore = 500
 
         self.discount_rate = 0.9  # constant
-        self.learning_rate = 0.1  # constant
+        self.learning_rate = 0.01  # constant
 
-        self.optimizer = tf.keras.optimizers.Adam(1e-2)
+        self.optimizer = tf.keras.optimizers.Adam(1e-3)
 
         self.weights_update_frequency = 50
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0
         self.Categorical_Vmax = 10
-        self.Categorical_n_atoms = 50
+        self.Categorical_n_atoms = 30
 
         # Quantile Regression DQN parameters
-        self.num_quantiles = 5
+        self.num_quantiles = 10

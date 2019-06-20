@@ -4,6 +4,46 @@ from utils.config import *
 import numpy as np
 
 
+class DQNNet:
+    def __init__(self, config):
+        self.config = config
+        self.input_dim = config.input_dim
+        self.action_dim = config.action_dim
+        self.output_dim = self.action_dim
+
+        self.optimizer = config.optimizer
+
+    def nn_model(self):
+        input_layer = tf.keras.layers.Input(shape=self.input_dim)
+
+        hidden_1 = tf.keras.layers.Dense(units=16, activation='relu')(input_layer)
+
+        hidden_2 = tf.keras.layers.Dense(units=16, activation='relu')(hidden_1)
+
+        output_layers = tf.keras.layers.Dense(units=self.output_dim,
+                                              use_bias=True,
+                                              input_shape=self.input_dim,  # input
+                                              activation='linear',
+                                              activity_regularizer=tf.keras.regularizers.l2(1e-3)
+                                              )(hidden_2)
+
+        output_layer_2 = tf.reduce_max(output_layers, axis=2)
+
+        self.net_model = tf.keras.models.Model(inputs=[input_layer], outputs=[output_layers, output_layer_2])
+
+        # we update the weights according to the loss of quantiles of optimal actions from both
+        # action network and target network
+        self.net_model.compile(
+            loss=[None, 'mean_squared_error'],
+            optimizer=self.optimizer
+
+        )
+
+        self.net_model.summary()  # print out the network summary
+
+        return self.net_model
+
+
 class CategoricalNet:
     def __init__(self, config):
         self.config = config
@@ -21,7 +61,7 @@ class CategoricalNet:
                                   use_bias=True,
                                   input_shape=self.input_dim,  # input
                                   kernel_initializer='random_uniform',
-                                  # activity_regularizer=tf.keras.regularizers.l1_l2(1e-2, 1e-2)
+                                  activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                   ),
 
             # processing layers ==> reshape and softmax, no training variables
@@ -60,7 +100,7 @@ class QuantileNet:
                                               use_bias=True,
                                               input_shape=self.input_dim,  # input
                                               kernel_initializer='random_uniform',
-                                              # activity_regularizer=tf.keras.regularizers.l1_l2(1e-2, 1e-2)
+                                              activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                               )(input_layer)
 
         # processing layers ==> reshape and softmax, no training variables
@@ -126,10 +166,18 @@ if __name__ == '__main__':
     # y_predict = np.random.randn(5, 2, 30)
     #
     # print(cat.my_loss(y_true, y_predict))
+    #
+    # C = Config()
+    # x = np.random.randn(30, 1, 4)
+    # cat = QuantileNet(config=C)
+    # cat_nn = cat.nn_model()
+    # predictions = cat_nn.predict(x)
+    # print(predictions[0].shape)
+    # print(predictions[1].shape)
 
     C = Config()
     x = np.random.randn(30, 1, 4)
-    cat = QuantileNet(config=C)
+    cat = DQNNet(config=C)
     cat_nn = cat.nn_model()
     predictions = cat_nn.predict(x)
     print(predictions[0].shape)

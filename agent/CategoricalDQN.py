@@ -62,9 +62,6 @@ class CategoricalDQNAgent:
             self.check = 0
 
             for step in range(self.steps):
-                self.total_steps += 1
-                self.check += 1
-
                 # reshape the input state to a tensor ===> Network ====> action probabilities
                 # size = (1, action dimension, number of atoms)
                 # e.g. size = (1, 2, 51)
@@ -90,17 +87,19 @@ class CategoricalDQNAgent:
                     loss = self.train_by_replay()
                     self.replay_buffer = deque()
 
-                # for certain period, we copy the actor network weights to the target network
-                if self.check >= self.best_max:
-                    self.best_max = self.check
-                    self.target_network.set_weights(self.actor_network.get_weights())
-
                 # if episode is finished, break the inner loop
                 # otherwise, continue
                 if done:
                     break
                 else:
                     current_state = next_state
+                    self.total_steps += 1
+                    self.check += 1
+
+                    # for certain period, we copy the actor network weights to the target network
+                    if self.check >= self.best_max:
+                        self.best_max = self.check
+                        self.target_network.set_weights(self.actor_network.get_weights())
 
     def train_by_replay(self):
         """
@@ -173,8 +172,6 @@ class CategoricalDQNAgent:
             self.check = 0
 
             for step in range(200):
-                self.check += 1
-
                 action_prob = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
@@ -190,6 +187,7 @@ class CategoricalDQNAgent:
                     break
                 else:
                     current_state = next_state
+                    self.check += 1
 
 
 if __name__ == '__main__':
