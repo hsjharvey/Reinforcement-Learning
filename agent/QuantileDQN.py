@@ -63,23 +63,24 @@ class QuantileDQNAgent:
 
                 # when we collect certain number of batches, perform replay and update
                 # the weights in actor network and clear the replay buffer
-                if len(list(self.replay_buffer)) == self.replay_buffer_size:
-                    loss = self.train_by_replay()
+                if each_ep > self.config.stop_explore and len(list(self.replay_buffer)) >= self.replay_buffer_size:
+                    self.train_by_replay()
                     self.replay_buffer = deque()
 
                 # if episode is finished, break the inner loop
                 # otherwise, continue
                 if done:
+                    self.total_steps += 1
                     break
                 else:
                     current_state = next_state
-                    self.check += 1
                     self.total_steps += 1
+                    self.check += 1
 
-                    # for certain period, we copy the actor network weights to the target network
-                    if self.check >= self.best_max:
-                        self.best_max = self.check
-                        self.target_network.set_weights(self.actor_network.get_weights())
+            # for certain period, we copy the actor network weights to the target network
+            if self.check >= self.best_max:
+                self.best_max = self.check
+                self.target_network.set_weights(self.actor_network.get_weights())
 
     def train_by_replay(self):
         # step 1: generate replay samples (size = self.batch_size) from the replay buffer

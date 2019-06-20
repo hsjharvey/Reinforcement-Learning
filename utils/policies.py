@@ -10,10 +10,10 @@ def epsilon_greedy(action_values, episode=0, stop_explore=10):
     :param stop_explore:
     :return:
     """
-    random_draw = np.random.random()
 
     if episode < stop_explore:
-        exploration = 0.9 ** episode
+        random_draw = np.random.random()
+        exploration = 0.9 ** np.exp(-0.1 * episode)
 
         if random_draw < exploration:
             return np.random.random_integers(0, 1)

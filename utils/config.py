@@ -14,11 +14,11 @@ class Config:
         self.steps = 500  # note that OpenAI gym has max environment steps (e.g. max_step = 200 for CartPole)
 
         # general RL agent parameters
-        self.batch_size = 32  # soze
+        self.batch_size = 32  # size for each training
         self.replay_buffer_size = 100  # must > batch size
         assert self.replay_buffer_size > self.batch_size
 
-        self.stop_explore = 500
+        self.stop_explore = 300
 
         self.discount_rate = 0.9  # constant
         self.learning_rate = 0.01  # constant

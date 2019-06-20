@@ -16,16 +16,12 @@ class DQNNet:
     def nn_model(self):
         input_layer = tf.keras.layers.Input(shape=self.input_dim)
 
-        hidden_1 = tf.keras.layers.Dense(units=16, activation='relu')(input_layer)
-
-        hidden_2 = tf.keras.layers.Dense(units=16, activation='relu')(hidden_1)
-
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=True,
                                               input_shape=self.input_dim,  # input
                                               activation='linear',
                                               activity_regularizer=tf.keras.regularizers.l2(1e-3)
-                                              )(hidden_2)
+                                              )(input_layer)
 
         output_layer_2 = tf.reduce_max(output_layers, axis=2)
 
@@ -60,7 +56,7 @@ class CategoricalNet:
             tf.keras.layers.Dense(units=self.output_dim,
                                   use_bias=True,
                                   input_shape=self.input_dim,  # input
-                                  kernel_initializer='random_uniform',
+                                  activation='linear',
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                   ),
 
@@ -99,7 +95,7 @@ class QuantileNet:
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=True,
                                               input_shape=self.input_dim,  # input
-                                              kernel_initializer='random_uniform',
+                                              activation='linear',
                                               activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                               )(input_layer)
 
