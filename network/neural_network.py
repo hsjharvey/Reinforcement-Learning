@@ -21,7 +21,7 @@ class DQNNet:
                                               input_shape=self.input_dim,  # input
                                               kernel_initializer=
                                               tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                                 stddev=0.05,
+                                                                                 stddev=0.1,
                                                                                  seed=None),
                                               activation='linear',
                                               activity_regularizer=tf.keras.regularizers.l2(1e-3)
@@ -63,7 +63,7 @@ class CategoricalNet:
                                   activation='linear',
                                   kernel_initializer=
                                   tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                     stddev=0.05,
+                                                                     stddev=0.1,
                                                                      seed=None),
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                   ),
@@ -106,7 +106,7 @@ class QuantileNet:
                                               activation='linear',
                                               kernel_initializer=
                                               tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                                 stddev=0.05,
+                                                                                 stddev=0.1,
                                                                                  seed=None),
                                               activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                               )(input_layer)
