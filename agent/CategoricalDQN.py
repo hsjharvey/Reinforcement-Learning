@@ -175,7 +175,7 @@ class CategoricalDQNAgent:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             self.check = 0
 
             for step in range(200):
@@ -207,5 +207,6 @@ if __name__ == '__main__':
     cat.transition()
 
     print("finish training")
+    print('=' * 64)
     print("evaluating.....")
     cat.eval_step(render=True)
