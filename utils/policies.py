@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def epsilon_greedy(action_values, episode=0, stop_explore=10):
+def epsilon_greedy(action_values, total_actions, episode=0, stop_explore=10):
     """
     exponential decay exploration E-greedy
     :param action_values:
@@ -16,7 +16,7 @@ def epsilon_greedy(action_values, episode=0, stop_explore=10):
         exploration = 0.9 ** np.exp(-0.1 * episode)
 
         if random_draw < exploration:
-            return np.random.random_integers(0, 1)
+            return np.random.random_integers(0, total_actions-1)
 
         else:
             return np.argmax(action_values, axis=0)

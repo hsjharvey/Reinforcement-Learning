@@ -73,7 +73,8 @@ class CategoricalDQNAgent:
 
                 action = policies.epsilon_greedy(action_values=action_value[0],
                                                  episode=each_ep,
-                                                 stop_explore=self.config.stop_explore)
+                                                 stop_explore=self.config.stop_explore,
+                                                 total_actions=self.config.action_dim)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 

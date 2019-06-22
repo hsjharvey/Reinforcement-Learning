@@ -44,7 +44,8 @@ class DQN:
 
                 action = policies.epsilon_greedy(action_values=action_values.reshape(self.config.action_dim),
                                                  episode=each_ep,
-                                                 stop_explore=self.config.stop_explore)
+                                                 stop_explore=self.config.stop_explore,
+                                                 total_actions=self.config.action_dim)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 

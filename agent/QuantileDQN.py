@@ -53,7 +53,8 @@ class QuantileDQNAgent:
 
                 action = policies.epsilon_greedy(action_values=action_value[0],
                                                  episode=each_ep,
-                                                 stop_explore=self.config.stop_explore)
+                                                 stop_explore=self.config.stop_explore,
+                                                 total_actions=self.config.action_dim)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 
@@ -95,10 +96,10 @@ class QuantileDQNAgent:
         quantiles_next = quantiles_next[np.arange(self.batch_size), action_next, :]
 
         rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.n_quantiles))
+        discount_rate = np.tile(self.config.discount_rate * (1 - terminals).reshape(self.batch_size, 1),
+                                (1, self.n_quantiles))
 
         # TD update
-        discount_rate = self.config.discount_rate * (1 - terminals)
-        discount_rate = np.tile(discount_rate.reshape(self.batch_size, 1), (1, self.n_quantiles))
         quantiles_next = rewards + discount_rate * quantiles_next
 
         self.actor_network.fit(x=current_states, y=quantiles_next, verbose=2)
@@ -115,7 +116,10 @@ class QuantileDQNAgent:
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)
 
+                print(quantile_values.mean(-1))
+
                 action = np.argmax(action_value[0])
+                print(action)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 
