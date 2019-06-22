@@ -39,7 +39,7 @@ class QuantileDQNAgent:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
-            print('max_step: {}'.format(self.check))
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             self.check = 0
 
             for step in range(self.steps):
@@ -76,10 +76,10 @@ class QuantileDQNAgent:
                 else:
                     current_state = next_state
                     self.total_steps += 1
-                    self.check += 1
+                    self.check += reward
 
             # for certain period, we copy the actor network weights to the target network
-            if self.check >= self.best_max:
+            if self.check > self.best_max:
                 self.best_max = self.check
                 self.target_network.set_weights(self.actor_network.get_weights())
 
@@ -108,7 +108,7 @@ class QuantileDQNAgent:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
-            print('max_step: {}'.format(self.check))
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             self.check = 0
 
             for step in range(200):
@@ -116,10 +116,7 @@ class QuantileDQNAgent:
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)
 
-                print(quantile_values.mean(-1))
-
                 action = np.argmax(action_value[0])
-                print(action)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
 

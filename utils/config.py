@@ -18,7 +18,7 @@ class Config:
         self.replay_buffer_size = 100  # must > batch size
         assert self.replay_buffer_size > self.batch_size
 
-        self.stop_explore = 300
+        self.stop_explore = 500
 
         self.discount_rate = 0.9  # constant
 
@@ -33,4 +33,4 @@ class Config:
         self.Categorical_n_atoms = 30
 
         # Quantile Regression DQN parameters
-        self.num_quantiles = 5
+        self.num_quantiles = 20

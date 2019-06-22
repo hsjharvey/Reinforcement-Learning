@@ -35,7 +35,7 @@ class DQN:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
-            print('max_step: {}'.format(self.check))
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             self.check = 0
 
             for step in range(self.steps):
@@ -67,11 +67,11 @@ class DQN:
 
                 else:
                     current_state = next_state
-                    self.check += 1
                     self.total_steps += 1
+                    self.check += reward
 
             # for certain period, we copy the actor network weights to the target network
-            if self.check >= self.best_max:
+            if self.check > self.best_max:
                 self.best_max = self.check
                 self.target_network.set_weights(self.actor_network.get_weights())
 
@@ -96,7 +96,7 @@ class DQN:
         for each_ep in range(100):
             current_state = self.envs.reset()
 
-            print('max_step: {}'.format(self.check))
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             self.check = 0
 
             for step in range(200):
