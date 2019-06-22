@@ -17,12 +17,9 @@ class DQNNet:
         input_layer = tf.keras.layers.Input(shape=self.input_dim)
 
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
-                                              use_bias=True,
+                                              use_bias=False,
                                               input_shape=self.input_dim,  # input
-                                              kernel_initializer=
-                                              tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                                 stddev=0.1,
-                                                                                 seed=None),
+                                              kernel_initializer=self.config.weights_initializer,
                                               activation='linear',
                                               activity_regularizer=tf.keras.regularizers.l2(1e-3)
                                               )(input_layer)
@@ -58,13 +55,10 @@ class CategoricalNet:
     def nn_model(self):
         self.net_model = tf.keras.models.Sequential([
             tf.keras.layers.Dense(units=self.output_dim,
-                                  use_bias=True,
+                                  use_bias=False,
                                   input_shape=self.input_dim,  # input
                                   activation='linear',
-                                  kernel_initializer=
-                                  tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                     stddev=0.1,
-                                                                     seed=None),
+                                  kernel_initializer=self.config.weights_initializer,
                                   activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                   ),
 
@@ -101,13 +95,10 @@ class QuantileNet:
         input_layer = tf.keras.layers.Input(shape=self.input_dim)
 
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
-                                              use_bias=True,
+                                              use_bias=False,
                                               input_shape=self.input_dim,  # input
                                               activation='linear',
-                                              kernel_initializer=
-                                              tf.keras.initializers.RandomNormal(mean=0.0,
-                                                                                 stddev=0.1,
-                                                                                 seed=None),
+                                              kernel_initializer=self.config.weights_initializer,
                                               activity_regularizer=tf.keras.regularizers.l1_l2(1e-3, 1e-3)
                                               )(input_layer)
 

@@ -21,11 +21,11 @@ class Config:
         self.stop_explore = 300
 
         self.discount_rate = 0.9  # constant
-        self.learning_rate = 0.01  # constant
 
+        self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0,
+                                                                      stddev=0.0001,
+                                                                      seed=None)
         self.optimizer = tf.keras.optimizers.RMSprop(1e-2)
-
-        self.weights_update_frequency = 50
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0
