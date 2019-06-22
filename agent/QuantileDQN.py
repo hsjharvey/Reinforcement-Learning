@@ -64,7 +64,7 @@ class QuantileDQNAgent:
 
                 # when we collect certain number of batches, perform replay and update
                 # the weights in actor network and clear the replay buffer
-                if len(list(self.replay_buffer)) >= self.replay_buffer_size:
+                if len(list(self.replay_buffer)) == self.replay_buffer_size:
                     self.train_by_replay()
                     self.replay_buffer = deque()
 

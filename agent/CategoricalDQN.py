@@ -49,12 +49,14 @@ class CategoricalDQNAgent:
 
     def transition(self):
         """
-        At this stage, the agent simply play and record
+        In transition, the agent simply plays and record
         [current_state, action, reward, next_state, done]
+        in the replay_buffer (or memory pool)
+
         Updating the weights of the neural network happens
         every single time the replay buffer size is reached.
-        done: boolean, whether the game has end or not
-        :return:
+
+        done: boolean, whether the game has end or not.
         """
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
@@ -62,7 +64,7 @@ class CategoricalDQNAgent:
             self.check = 0
 
             for step in range(self.steps):
-                # reshape the input state to a tensor ===> Network ====> action probabilities
+                # reshape the input state to a tensor ===> Network ===> action probabilities
                 # size = (1, action dimension, number of atoms)
                 # e.g. size = (1, 2, 51)
                 action_prob = self.actor_network.predict(
@@ -71,6 +73,7 @@ class CategoricalDQNAgent:
                 # calculate action value (Q-value)
                 action_value = np.dot(np.array(action_prob), self.atoms)
 
+                # choose action according to the E-greedy policy
                 action = policies.epsilon_greedy(action_values=action_value[0],
                                                  episode=each_ep,
                                                  stop_explore=self.config.stop_explore,
@@ -82,9 +85,10 @@ class CategoricalDQNAgent:
                 self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
                                            next_state.reshape(self.input_dim).tolist(), reward, done])
 
-                # when we collect certain number of batches, perform replay and update
-                # the weights in actor network and clear the replay buffer
-                if len(list(self.replay_buffer)) >= self.replay_buffer_size:
+                # when we collect certain number of batches, perform replay and
+                # update the weights in actor network (Backpropagation)
+                # clear the replay buffer
+                if len(list(self.replay_buffer)) == self.replay_buffer_size:
                     self.train_by_replay()
                     self.replay_buffer = deque()
 
@@ -98,7 +102,8 @@ class CategoricalDQNAgent:
                     self.total_steps += 1
                     self.check += reward
 
-            # for certain period, we copy the actor network weights to the target network
+            # for any episode where the reward is higher
+            # we copy the actor network weights to the target network
             if self.check > self.best_max:
                 self.best_max = self.check
                 self.target_network.set_weights(self.actor_network.get_weights())
