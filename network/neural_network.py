@@ -106,17 +106,19 @@ class QuantileNet:
         output_layers = tf.keras.layers.Reshape((self.action_dim, self.num_quantiles))(output_layers)
 
         # get the action values
-        # tf.cast is to cast the action values to in32
+        # tf.cast is to cast the action values to int32
         action_values = tf.reduce_sum(output_layers, axis=2)
         idx = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
 
-        # to get the optimal action quantiles [batch_size, 2 actions, quantiles per action]
-        # we need to generate the correct index
+        # to get the optimal action quantiles
+        # size = [batch_size, 2 actions, quantiles per action]
+        # we need to generate the correct index, size = [batch_size, argmax index]
         idx = tf.transpose([tf.range(tf.shape(output_layers)[0]), idx])
 
         # the final result is a [batch_size, quantiles] tensor for optimal actions
         output_layer_2 = tf.gather_nd(params=output_layers, indices=idx)
 
+        # tensorflow keras: to set up the neural network itself.
         self.net_model = tf.keras.models.Model(inputs=input_layer, outputs=[output_layers, output_layer_2])
 
         # we update the weights according to the loss of quantiles of optimal actions from both
@@ -132,16 +134,22 @@ class QuantileNet:
         return self.net_model
 
     def quantile_huber_loss(self, y_true, y_predict):
+        """
+        The loss function that is passed to the network
+        :param y_true: True label, quantiles_next
+        :param y_predict: predicted label, quantiles
+        :return:
+        """
         diff = y_true - y_predict
 
-        regularization_loss = tf.add_n(self.net_model.losses)
-
-        loss = tf.reduce_mean(
+        model_loss = tf.reduce_mean(
             (self.huber_loss(diff) *
              tf.abs(self.cum_density - tf.cast(diff < 0, dtype=tf.float32))),
             axis=0)
 
-        loss = tf.reduce_sum(loss) + regularization_loss
+        regularization_loss = tf.add_n(self.net_model.losses)
+
+        loss = tf.add_n([tf.reduce_sum(model_loss), regularization_loss])
 
         return loss
 

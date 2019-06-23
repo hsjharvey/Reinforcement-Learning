@@ -25,12 +25,13 @@ class Config:
         self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0,
                                                                       stddev=0.0001,
                                                                       seed=None)
-        self.optimizer = tf.keras.optimizers.RMSprop(1e-2)
+        self.optimizer = tf.keras.optimizers.RMSprop(lr=1e-2,  # learning rate
+                                                     clipnorm=1.0)  # gradient clipping
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0
         self.Categorical_Vmax = 10
-        self.Categorical_n_atoms = 30
+        self.Categorical_n_atoms = 50
 
         # Quantile Regression DQN parameters
-        self.num_quantiles = 20
+        self.num_quantiles = 30
