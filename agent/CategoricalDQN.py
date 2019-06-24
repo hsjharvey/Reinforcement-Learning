@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from collections import deque
 import gym
-import time
 
 
 class CategoricalDQNAgent:
@@ -37,13 +36,8 @@ class CategoricalDQNAgent:
 
         self.delta_z = (config.Categorical_Vmax - config.Categorical_Vmin) / float(config.Categorical_n_atoms - 1)
 
-        # June 17, 2019: there seems to be a problem with checkpoint implementation
-        # do not pass it to model.fit()
-        self.check = tf.keras.callbacks.ModelCheckpoint('../saved_network_models/harvey.model',
-                                                        monitor='loss',
-                                                        save_best_only=True,
-                                                        save_weights_only=False,
-                                                        mode='auto')
+        self.keras_check = config.keras_checkpoint
+
         self.check = 0
         self.best_max = 0
 
@@ -169,7 +163,7 @@ class CategoricalDQNAgent:
             np.add.at(target_histo[i][action_next[i]], l[i], d_m_u[i])  # update d_m_u
 
         # update actor network weights
-        self.actor_network.fit(x=current_states, y=target_histo, verbose=2)
+        self.actor_network.fit(x=current_states, y=target_histo, verbose=2, callbacks=[self.keras_check])
 
     def eval_step(self, render=True):
         """

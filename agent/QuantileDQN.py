@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from collections import deque
 import gym
-import time
 
 
 class QuantileDQNAgent:
@@ -31,6 +30,8 @@ class QuantileDQNAgent:
 
         self.replay_buffer_size = config.replay_buffer_size
         self.replay_buffer = deque()
+
+        self.keras_check = config.keras_checkpoint
 
         self.check = 0
         self.best_max = 0
@@ -106,23 +107,23 @@ class QuantileDQNAgent:
 
         # step 2: get the next state quantiles
         # and choose the optimal actions from next state quantiles
-        quantiles_next, _ = self.target_network.predict(next_states)
-        action_value_next = quantiles_next.mean(-1)
+        quantile_next, _ = self.target_network.predict(next_states)
+        action_value_next = quantile_next.mean(-1)
         action_next = np.argmax(action_value_next, axis=1)
 
         # choose the optimal quantiles next
-        quantiles_next = quantiles_next[np.arange(self.batch_size), action_next, :]
+        quantile_next = quantile_next[np.arange(self.batch_size), action_next, :]
 
-        # match the rewards and the discount rates from the memory to the same size as the quantiles_next
+        # match the rewards and the discount rates from the memory to the same size as the quantile_next
         rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.n_quantiles))
         discount_rate = np.tile(self.config.discount_rate * (1 - terminals).reshape(self.batch_size, 1),
                                 (1, self.n_quantiles))
 
         # TD update
-        quantiles_next = rewards + discount_rate * quantiles_next
+        quantile_next = rewards + discount_rate * quantile_next
 
         # update actor network weights
-        self.actor_network.fit(x=current_states, y=quantiles_next, verbose=2)
+        self.actor_network.fit(x=current_states, y=quantile_next, verbose=2, callbacks=[self.keras_check])
 
     def eval_step(self, render=True):
         """

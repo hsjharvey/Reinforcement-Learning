@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from collections import deque
 import gym
-import time
 
 
 class DQN:
@@ -27,6 +26,8 @@ class DQN:
 
         self.replay_buffer_size = config.replay_buffer_size
         self.replay_buffer = deque()
+
+        self.keras_check = config.keras_checkpoint
 
         self.check = 0
         self.best_max = 0
@@ -109,7 +110,7 @@ class DQN:
         # TD update
         action_values_next = rewards + self.config.discount_rate * action_values_next * (1 - terminals)
 
-        self.actor_network.fit(x=current_states, y=action_values_next, verbose=2)
+        self.actor_network.fit(x=current_states, y=action_values_next, verbose=2, callbacks=[self.keras_check])
 
     def eval_step(self, render=True):
         """
