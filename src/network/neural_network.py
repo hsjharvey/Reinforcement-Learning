@@ -112,6 +112,8 @@ class QuantileNet:
         self.optimizer = config.optimizer
         self.net_model = None
 
+        self.k = config.huber_loss_threshold
+
         self.cum_density = (2 * np.arange(config.num_quantiles) + 1) / (2.0 * config.num_quantiles)
 
     def nn_model(self):
@@ -161,7 +163,7 @@ class QuantileNet:
         The loss function that is passed to the network
         :param y_true: True label, quantiles_next
         :param y_predict: predicted label, quantiles
-        :return:
+        :return: quantile huber loss between the target quantiles and the quantiles
         """
         diff = y_true - y_predict
 
@@ -176,5 +178,13 @@ class QuantileNet:
 
         return loss
 
-    def huber_loss(self, item, k=1.0):
-        return tf.where(tf.abs(item) < k, 0.5 * np.power(item, 2), k * (tf.abs(item) - 0.5 * k))
+    def huber_loss(self, item):
+        return tf.where(tf.abs(item) < self.k, 0.5 * np.power(item, 2), self.k * (tf.abs(item) - 0.5 * self.k))
+
+
+class ExpectileNet:
+    def __init__(self, config):
+        pass
+
+    def nn_model(self):
+        pass

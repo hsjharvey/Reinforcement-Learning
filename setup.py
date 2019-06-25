@@ -6,5 +6,6 @@ setup(name='DeepRL',
       install_requires=['gym',
                         'numpy',
                         'keras',
+                        'scipy',
                         'tensorflow>=2.0.0b1']
       )

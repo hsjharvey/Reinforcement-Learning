@@ -43,3 +43,4 @@ class Config:
 
         # Quantile Regression DQN parameters
         self.num_quantiles = 20
+        self.huber_loss_threshold = 1.0
