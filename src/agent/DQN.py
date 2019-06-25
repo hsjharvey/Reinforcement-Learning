@@ -1,13 +1,12 @@
 # -*- coding:utf-8 -*-
-from utils import policies, config, replay_fn
-from network import neural_network
+from ..utils import *
 import numpy as np
 import tensorflow as tf
 from collections import deque
 import gym
 
 
-class DQN:
+class DQNAgent:
     def __init__(self, config, base_network):
         self.base_network = base_network
         self.config = config
@@ -47,6 +46,7 @@ class DQN:
             current_state = self.envs.reset()
 
             print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
             self.check = 0
 
             for step in range(self.steps):
@@ -121,6 +121,7 @@ class DQN:
             current_state = self.envs.reset()
 
             print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
             self.check = 0
 
             for step in range(200):
@@ -138,15 +139,3 @@ class DQN:
                 else:
                     current_state = next_state
                     self.check += 1
-
-
-if __name__ == '__main__':
-    C = config.Config()
-    quant = DQN(config=C, base_network=neural_network.DQNNet(config=C))
-    quant.envs = gym.make('CartPole-v0')
-    quant.transition()
-
-    print("finish training")
-    print('=' * 64)
-    print("evaluating.....")
-    quant.eval_step(render=True)

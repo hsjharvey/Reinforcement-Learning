@@ -20,7 +20,7 @@ class Config:
 
         self.stop_explore = 300
 
-        self.discount_rate = 0.99  # constant, a super important parameter
+        self.discount_rate = 0.99  # constant
 
         # neural network parameters
         self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0,
@@ -30,7 +30,9 @@ class Config:
         self.optimizer = tf.keras.optimizers.RMSprop(lr=1e-2,  # learning rate
                                                      clipnorm=1.0)  # gradient clipping
 
-        self.keras_checkpoint = tf.keras.callbacks.ModelCheckpoint('../saved_network_models/harvey.model',
+        self.regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
+
+        self.keras_checkpoint = tf.keras.callbacks.ModelCheckpoint('../results/saved_network_models/harvey.model',
                                                                    save_weights_only=True,
                                                                    mode='auto')
 

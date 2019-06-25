@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
-from utils import policies, config, replay_fn
-from network import neural_network
+from ..utils import *
 import numpy as np
 import tensorflow as tf
 from collections import deque
@@ -8,8 +7,9 @@ import gym
 
 
 class CategoricalDQNAgent:
-    def __init__(self, config):
+    def __init__(self, config, base_network):
         self.config = config
+        self.base_network = base_network
 
         self.input_dim = config.input_dim  # neural network input dimension
         self.n_atoms = config.Categorical_n_atoms
@@ -23,8 +23,9 @@ class CategoricalDQNAgent:
         )  # Z
 
         self.envs = None
-        self.actor_network = None
-        self.target_network = None
+        self.actor_network = self.base_network.nn_model()
+        self.target_network = tf.keras.models.clone_model(self.actor_network)
+        self.target_network.set_weights(self.actor_network.get_weights())
 
         self.total_steps = 0
         self.episodes = config.episodes
@@ -55,13 +56,14 @@ class CategoricalDQNAgent:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
             print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
             self.check = 0
 
             for step in range(self.steps):
                 # reshape the input state to a tensor ===> Network ===> action probabilities
                 # size = (1, action dimension, number of atoms)
                 # e.g. size = (1, 2, 51)
-                action_prob = self.actor_network.predict(
+                action_prob, _ = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 # calculate action value (Q-value)
@@ -117,14 +119,14 @@ class CategoricalDQNAgent:
         # e.g. (32, 2, 51) where batch_size =  32,
         # each batch contains 2 actions,
         # each action distribution contains 51 bins.
-        prob_next = self.target_network.predict(next_states)
+        prob_next, _ = self.target_network.predict(next_states)
 
         # step 3:
         # calculate next state Q values, size = (batch_size, action_dimension, 1).
         # e.g. (32, 2, 1), each action has one Q value.
         # then choose the higher value out of the 2 for each of the 32 batches.
-        q_next = np.dot(np.array(prob_next), self.atoms)
-        action_next = np.argmax(q_next, axis=1)
+        action_value_next = np.dot(np.array(prob_next), self.atoms)
+        action_next = np.argmax(action_value_next, axis=1)
 
         # step 4:
         # use the optimal actions as index, pick out the probabilities of the optimal action
@@ -155,12 +157,12 @@ class CategoricalDQNAgent:
         # P(x, a*): size = (32, 1, 51) and P(x(t+1), a*): size = (32, 1, 51), i.e. only for optimal actions
         # However, the network generates P(x, a): size = (32, 2, 51), i.e. for all actions
         # Therefore, I create a tensor with zeros (size = (32, 2, 51)) and update only the probability histogram
-        target_histo = np.zeros(shape=(self.batch_size, self.config.action_dim, self.n_atoms))
+        target_histo = np.zeros(shape=(self.batch_size, self.n_atoms))
 
         for i in range(self.batch_size):
             target_histo[i][action_next[i]] = 0.0  # clear the histogram that needs to be updated
-            np.add.at(target_histo[i][action_next[i]], l[i], d_m_l[i])  # update d_m_l
-            np.add.at(target_histo[i][action_next[i]], l[i], d_m_u[i])  # update d_m_u
+            np.add.at(target_histo[i], l[i], d_m_l[i])  # update d_m_l
+            np.add.at(target_histo[i], l[i], d_m_u[i])  # update d_m_u
 
         # update actor network weights
         self.actor_network.fit(x=current_states, y=target_histo, verbose=2, callbacks=[self.keras_check])
@@ -174,10 +176,11 @@ class CategoricalDQNAgent:
             current_state = self.envs.reset()
 
             print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
             self.check = 0
 
             for step in range(200):
-                action_prob = self.target_network.predict(
+                action_prob, _ = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 action_value = np.dot(np.array(action_prob), self.atoms)
@@ -193,18 +196,3 @@ class CategoricalDQNAgent:
                 else:
                     current_state = next_state
                     self.check += 1
-
-
-if __name__ == '__main__':
-    C = config.Config()
-    cat = CategoricalDQNAgent(config=C)
-    cat.envs = gym.make('CartPole-v0')
-    cat.actor_network = neural_network.CategoricalNet(config=C).nn_model()
-    cat.target_network = tf.keras.models.clone_model(cat.actor_network)
-    cat.target_network.set_weights(cat.actor_network.get_weights())
-    cat.transition()
-
-    print("finish training")
-    print('=' * 64)
-    print("evaluating.....")
-    cat.eval_step(render=True)
