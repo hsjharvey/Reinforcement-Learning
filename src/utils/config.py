@@ -27,7 +27,7 @@ class Config:
                                                                       stddev=0.0001,
                                                                       seed=None)
 
-        self.optimizer = tf.keras.optimizers.RMSprop(lr=1e-2,  # learning rate
+        self.optimizer = tf.keras.optimizers.RMSprop(lr=1e-3,  # learning rate
                                                      clipnorm=1.0)  # gradient clipping
 
         self.regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
