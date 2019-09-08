@@ -3,8 +3,6 @@ import tensorflow as tf
 
 
 class Config:
-    device = tf.device('/gpu:0')
-
     def __init__(self):
         # environment parameters
         self.input_dim = (1, 4)  # input feature dimension
@@ -32,9 +30,13 @@ class Config:
 
         self.regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
 
-        self.keras_checkpoint = tf.keras.callbacks.ModelCheckpoint('../results/saved_network_models/harvey.model',
-                                                                   save_weights_only=True,
-                                                                   mode='auto')
+        self.keras_checkpoint = [
+            tf.keras.callbacks.ModelCheckpoint('./results/saved_network_models/harvey.model',
+                                               save_weights_only=True,
+                                               mode='auto'),
+            tf.keras.callbacks.TensorBoard(log_dir='/logs'),
+            tf.keras.callbacks.EarlyStopping(patience=10, monitor='val_loss'),
+        ]
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0
@@ -44,3 +46,6 @@ class Config:
         # Quantile Regression DQN parameters
         self.num_quantiles = 20
         self.huber_loss_threshold = 1.0
+
+    def multi_GPU_support(self):
+        pass
