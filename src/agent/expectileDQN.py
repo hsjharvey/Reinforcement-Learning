@@ -6,7 +6,7 @@ from collections import deque
 import gym
 
 
-class CategoricalDQNAgent:
+class ExpectileDQNAgent:
     def __init__(self, config, base_network):
         pass
 

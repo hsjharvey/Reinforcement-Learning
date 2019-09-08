@@ -16,24 +16,28 @@ class DQNNet:
         self.optimizer = config.optimizer
 
     def nn_model(self):
-        input_layer = tf.keras.layers.Input(shape=self.input_dim)
+        input_layer = tf.keras.layers.Input(shape=self.input_dim, name='state_tensor_input')
 
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=False,
                                               input_shape=self.input_dim,  # input
                                               kernel_initializer=self.config.weights_initializer,
                                               activation='linear',
-                                              activity_regularizer=self.config.regularizer
+                                              activity_regularizer=self.config.regularizer,
+                                              name='fully_connect'
                                               )(input_layer)
 
-        actorNet_output_argmax = tf.reduce_max(output_layers, axis=2)
+        actorNet_output_argmax = tf.reduce_max(output_layers, axis=2, name='argmax')
 
-        self.net_model = tf.keras.models.Model(inputs=[input_layer], outputs=[output_layers, actorNet_output_argmax])
+        self.net_model = tf.keras.models.Model(
+            inputs=[input_layer],
+            outputs=[output_layers, actorNet_output_argmax]
+        )
 
         # we update the weights according to the loss of quantiles of optimal actions from both
         # action network and target network
         self.net_model.compile(
-            loss=[None, 'mean_squared_error'],
+            loss=[None, 'mean_squared_error'],  # apply loss function only to the second output
             optimizer=self.optimizer
 
         )
@@ -61,14 +65,15 @@ class CategoricalNet:
         )  # Z
 
     def nn_model(self):
-        input_layer = tf.keras.layers.Input(shape=self.input_dim)
+        input_layer = tf.keras.layers.Input(shape=self.input_dim, name='state_tensor_input')
 
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=False,
                                               input_shape=self.input_dim,  # input
                                               activation='linear',
                                               kernel_initializer=self.config.weights_initializer,
-                                              activity_regularizer=self.config.regularizer
+                                              activity_regularizer=self.config.regularizer,
+                                              name='fully_connect'
                                               )(input_layer)
 
         # processing layers ==> reshape and softmax, no training variables
@@ -88,10 +93,13 @@ class CategoricalNet:
         actorNet_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
 
         # tensorflow keras: to set up the neural network itself.
-        self.net_model = tf.keras.models.Model(inputs=input_layer, outputs=[output_layers, actorNet_output_argmax])
+        self.net_model = tf.keras.models.Model(
+            inputs=input_layer,
+            outputs=[output_layers, actorNet_output_argmax]
+        )
 
         self.net_model.compile(
-            loss=[None, 'categorical_crossentropy'],
+            loss=[None, 'categorical_cross_entropy'],  # apply loss function only to the second output
             optimizer=self.optimizer
 
         )
@@ -117,14 +125,15 @@ class QuantileNet:
         self.cum_density = (2 * np.arange(config.num_quantiles) + 1) / (2.0 * config.num_quantiles)
 
     def nn_model(self):
-        input_layer = tf.keras.layers.Input(shape=self.input_dim)
+        input_layer = tf.keras.layers.Input(shape=self.input_dim, name='state_tensor_input')
 
         output_layers = tf.keras.layers.Dense(units=self.output_dim,
                                               use_bias=False,
                                               input_shape=self.input_dim,  # input
                                               activation='linear',
                                               kernel_initializer=self.config.weights_initializer,
-                                              activity_regularizer=self.config.regularizer
+                                              activity_regularizer=self.config.regularizer,
+                                              name='fully_connect'
                                               )(input_layer)
 
         # processing layers ==> reshape and softmax, no training variables
@@ -144,12 +153,15 @@ class QuantileNet:
         actorNet_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
 
         # tensorflow keras: to set up the neural network itself.
-        self.net_model = tf.keras.models.Model(inputs=input_layer, outputs=[output_layers, actorNet_output_argmax])
+        self.net_model = tf.keras.models.Model(
+            inputs=input_layer,
+            outputs=[output_layers, actorNet_output_argmax]
+        )
 
         # we update the weights according to the loss of quantiles of optimal actions from both
         # action network and target network
         self.net_model.compile(
-            loss=[None, self.quantile_huber_loss],
+            loss=[None, self.quantile_huber_loss],  # apply loss function only to the second output
             optimizer=self.optimizer
 
         )
@@ -174,12 +186,16 @@ class QuantileNet:
 
         regularization_loss = tf.add_n(self.net_model.losses)
 
-        loss = tf.add_n([tf.reduce_sum(model_loss), regularization_loss])
+        total_loss = tf.add_n([tf.reduce_sum(model_loss), regularization_loss])
 
-        return loss
+        return total_loss
 
     def huber_loss(self, item):
-        return tf.where(tf.abs(item) < self.k, 0.5 * np.power(item, 2), self.k * (tf.abs(item) - 0.5 * self.k))
+        return tf.where(
+            tf.abs(item) < self.k,
+            0.5 * np.power(item, 2),
+            self.k * (tf.abs(item) - 0.5 * self.k)
+        )
 
 
 class ExpectileNet:

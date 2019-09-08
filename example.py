@@ -42,6 +42,6 @@ def run_QuantileDQN_example():
 
 
 if __name__ == '__main__':
-    run_DQN_example()
+    # run_DQN_example()
     # run_CategoricalDQN_example()
-    # run_QuantileDQN_example()
+    run_QuantileDQN_example()

@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 import gym
-import time
 import numpy as np
 
 if __name__ == '__main__':
