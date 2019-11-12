@@ -30,3 +30,12 @@ class A2Cgent:
 
         self.check = 0
         self.best_max = 0
+
+    def transition(self):
+        pass
+
+    def train_by_replay(self):
+        pass
+
+    def eval_step(self, render=True):
+        pass

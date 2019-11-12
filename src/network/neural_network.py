@@ -204,3 +204,11 @@ class ExpectileNet:
 
     def nn_model(self):
         pass
+
+
+class ActorCriticNet:
+    def __int__(self, config):
+        pass
+
+    def nn_model(self):
+        pass
