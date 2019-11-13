@@ -4,7 +4,7 @@ from src import *
 
 def run_DQN_example():
     C = config.Config()
-    base_network = neural_network.DQNNet(config=C)
+    base_network = DQN_net.DQNNet(config=C)
     cat = DQNAgent(config=C, base_network=base_network)
     cat.envs = gym.make('CartPole-v0')
 
@@ -17,7 +17,7 @@ def run_DQN_example():
 
 def run_CategoricalDQN_example():
     C = config.Config()
-    base_network = neural_network.CategoricalNet(config=C)
+    base_network = CategoricalDQN_net.CategoricalNet(config=C)
     cat = CategoricalDQNAgent(config=C, base_network=base_network)
     cat.envs = gym.make('CartPole-v0')
 
@@ -30,7 +30,7 @@ def run_CategoricalDQN_example():
 
 def run_QuantileDQN_example():
     C = config.Config()
-    base_network = neural_network.QuantileNet(config=C)
+    base_network = QuantileDQN_net.QuantileNet(config=C)
     cat = QuantileDQNAgent(config=C, base_network=base_network)
     cat.envs = gym.make('CartPole-v0')
 

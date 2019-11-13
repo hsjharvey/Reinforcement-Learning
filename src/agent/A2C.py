@@ -32,7 +32,56 @@ class A2Cgent:
         self.best_max = 0
 
     def transition(self):
-        pass
+        """
+                In transition, the agent simply plays and record
+                [current_state, action, reward, next_state, done]
+                in the replay_buffer (or memory pool)
+
+                Updating the weights of the neural network happens
+                every single time the replay buffer size is reached.
+
+                done: boolean, whether the game has end or not.
+                """
+        for each_ep in range(self.episodes):
+            current_state = self.envs.reset()
+
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
+            self.check = 0
+
+            for step in range(self.steps):
+                quantile_values, _ = self.actor.predict(
+                    np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
+                action_value = quantile_values.mean(-1)
+
+                # choose action according to the E-greedy policy
+                action = policies.epsilon_greedy(action_values=action_value[0],
+                                                 episode=each_ep,
+                                                 stop_explore=self.config.stop_explore,
+                                                 total_actions=self.config.action_dim)
+
+                next_state, reward, done, _ = self.envs.step(action=action)
+
+                # record the per step history into replay buffer
+                self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
+                                           next_state.reshape(self.input_dim).tolist(), reward, done])
+
+                # when we collect certain number of batches, perform replay and
+                # update the weights in the actor network (Backpropagation)
+                # reset the replay buffer
+                if len(list(self.replay_buffer)) == self.replay_buffer_size:
+                    self.train_by_replay()
+                    self.replay_buffer = deque()
+
+                # if episode is finished, break the inner loop
+                # otherwise, continue
+                if done:
+                    self.total_steps += 1
+                    break
+                else:
+                    current_state = next_state
+                    self.total_steps += 1
+                    self.check += reward
 
     def train_by_replay(self):
         pass
