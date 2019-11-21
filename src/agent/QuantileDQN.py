@@ -98,7 +98,7 @@ class QuantileDQNAgent:
 
     def train_by_replay(self):
         """
-        TD update by replay the history.
+        TD update by replaying the history.
         """
         # step 1: generate replay samples (size = self.batch_size) from the replay buffer
         # e.g. uniform random replay or prioritize experience replay

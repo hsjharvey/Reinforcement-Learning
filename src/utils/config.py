@@ -31,7 +31,7 @@ class Config:
         self.regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
 
         self.keras_checkpoint = [
-            tf.keras.callbacks.ModelCheckpoint('./results/saved_network_models/harvey.model',
+            tf.keras.callbacks.ModelCheckpoint(filepath='./results/saved_network_models/harvey.model',
                                                save_weights_only=True,
                                                mode='auto'),
             tf.keras.callbacks.TensorBoard(log_dir='/logs'),

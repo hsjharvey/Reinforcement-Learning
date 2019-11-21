@@ -33,15 +33,15 @@ class A2Cgent:
 
     def transition(self):
         """
-                In transition, the agent simply plays and record
-                [current_state, action, reward, next_state, done]
-                in the replay_buffer (or memory pool)
+        In transition, the agent simply plays and record
+        [current_state, action, reward, next_state, done]
+        in the replay_buffer (or memory pool)
 
-                Updating the weights of the neural network happens
-                every single time the replay buffer size is reached.
+        Updating the weights of the neural network happens
+        every single time the replay buffer size is reached.
 
-                done: boolean, whether the game has end or not.
-                """
+        done: boolean, whether the game has end or not.
+        """
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 

@@ -28,6 +28,12 @@ class DQNNet:
                               name='fully_connect'
                               )(input_layer)
 
+        # into probabilities
+        output_layers = Softmax(axis=-1)(output_layers)
+
+        # output the action with the highest probability
+        # note this is merely an optional output from the network
+        # the agent's choice depends on the policies
         actorNet_output_argmax = tf.reduce_max(output_layers, axis=2, name='argmax')
 
         self.net_model = tf.keras.models.Model(

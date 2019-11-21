@@ -106,7 +106,7 @@ class CategoricalDQNAgent:
 
     def train_by_replay(self):
         """
-        TD update by replay the history.
+        TD update by replaying the history.
         Implementation of algorithm 1 in the paper.
         """
         # step 1: generate replay samples (size = self.batch_size) from the replay buffer
