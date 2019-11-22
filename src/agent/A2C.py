@@ -6,7 +6,7 @@ from collections import deque
 import gym
 
 
-class A2Cgent:
+class A2Cagent:
     def __init__(self, config, base_network):
         self.base_network = base_network
         self.config = config
@@ -14,9 +14,7 @@ class A2Cgent:
         self.input_dim = config.input_dim  # neural network input dimension
 
         self.envs = None
-        self.actor = self.base_network.nn_model()
-        self.critic = tf.keras.models.clone_model(self.actor)
-        self.critic.set_weights(self.actor.get_weights())
+        self.A2C_network = self.base_network.nn_model()
 
         self.total_steps = 0
         self.episodes = config.episodes
@@ -50,28 +48,28 @@ class A2Cgent:
             self.check = 0
 
             for step in range(self.steps):
-                quantile_values, _ = self.actor.predict(
+                _, actor_output, _ = self.A2C_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
-                action_value = quantile_values.mean(-1)
 
                 # choose action according to the E-greedy policy
-                action = policies.epsilon_greedy(action_values=action_value[0],
+                action = policies.epsilon_greedy(action_values=actor_output[0],
                                                  episode=each_ep,
                                                  stop_explore=self.config.stop_explore,
                                                  total_actions=self.config.action_dim)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
+                returns = self.config.gamma * reward  # calculate returns/discounted rewards
 
                 # record the per step history into replay buffer
                 self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
-                                           next_state.reshape(self.input_dim).tolist(), reward, done])
+                                           next_state.reshape(self.input_dim).tolist(), returns, done])
 
                 # when we collect certain number of batches, perform replay and
                 # update the weights in the actor network (Backpropagation)
                 # reset the replay buffer
                 if len(list(self.replay_buffer)) == self.replay_buffer_size:
                     self.train_by_replay()
-                    self.replay_buffer = deque()
+                self.replay_buffer = deque()
 
                 # if episode is finished, break the inner loop
                 # otherwise, continue
@@ -84,7 +82,19 @@ class A2Cgent:
                     self.check += reward
 
     def train_by_replay(self):
-        pass
+        """
+        TD update by replaying the history.
+        """
+        # step 1: generate replay samples (size = self.batch_size) from the replay buffer
+        # e.g. uniform random replay or prioritize experience replay
+        current_states, actions, next_states, rewards, done = \
+            replay_fn.uniform_random_replay(self.replay_buffer, self.batch_size)
+
+        # step 2: get the optimal action values for the next state
+        log_action_prob, _, critic_values = self.A2C_network.predict(current_states)
+        self.A2C_network.log_action_prob = log_action_prob
+
+        self.A2C_network.fit(x=current_states, y=rewards, verbose=2, callbacks=[self.keras_check])
 
     def eval_step(self, render=True):
         pass

@@ -41,7 +41,21 @@ def run_QuantileDQN_example():
     cat.eval_step(render=True)
 
 
+def run_A2C_example():
+    C = config.Config()
+    base_network = A2C_net.ActorCriticNet(config=C)
+    A2C = A2Cagent(config=C, base_network=base_network)
+    A2C.envs = gym.make('CartPole-v0')
+
+    A2C.transition()
+    print("finish training")
+    print('=' * 64)
+    print("evaluating.....")
+    # cat.eval_step(render=True)
+
+
 if __name__ == '__main__':
     # run_DQN_example()
     # run_CategoricalDQN_example()
-    run_QuantileDQN_example()
+    # run_QuantileDQN_example()
+    run_A2C_example()

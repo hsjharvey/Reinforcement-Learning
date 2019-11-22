@@ -46,7 +46,6 @@ class DQNNet:
         self.net_model.compile(
             loss=[None, 'mean_squared_error'],  # apply loss function only to the second output
             optimizer=self.optimizer
-
         )
 
         self.net_model.summary()  # print out the network structure

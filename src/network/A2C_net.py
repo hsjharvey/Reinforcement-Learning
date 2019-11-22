@@ -6,15 +6,14 @@ from tensorflow.keras.layers import Input, Dense, Reshape, Softmax
 
 
 class ActorCriticNet:
-    def __int__(self, config):
+    def __init__(self, config):
         self.config = config
         self.num_atoms = config.Categorical_n_atoms
         self.input_dim = config.input_dim
         self.action_dim = config.action_dim
-        self.advantages = None
+        self.log_action_prob = None
 
         self.optimizer = config.optimizer
-        self.net_model = None
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
@@ -38,16 +37,16 @@ class ActorCriticNet:
                               )(input_layer)
 
         # log probability
-        log_prob = tf.math.log(actor_output)
+        log_action_prob = tf.math.log(actor_output)
 
         self.net_model = tf.keras.models.Model(
             inputs=[input_layer],
-            outputs=[log_prob, actor_output, critic_output]
+            outputs=[log_action_prob, actor_output, critic_output]
         )
 
         # the loss values in a2c are very complicated.
         self.net_model.compile(
-            loss=[None, self.actor_net_loss, self.critic_net_loss],  # apply loss function only to the second output
+            loss=[None, self.actor_net_loss, self.critic_net_loss],
             optimizer=self.optimizer
         )
 
@@ -56,7 +55,19 @@ class ActorCriticNet:
         return self.net_model
 
     def actor_net_loss(self, y_true, y_predict):
-        pass
+        """
+        actor network loss function
+        :param y_true: returns (discounted rewards)
+        :param y_predict: value predicted by critic_net
+        :return: loss function
+        """
+        return - tf.reduce_mean(self.log_action_prob * (y_true - y_predict))
 
     def critic_net_loss(self, y_true, y_predict):
-        pass
+        """
+        critic network loss function
+        :param y_true: returns (discounted rewards)
+        :param y_predict: value predicted by critic_net
+        :return: loss function
+        """
+        return tf.keras.losses.mean_squared_error(y_true, y_predict)

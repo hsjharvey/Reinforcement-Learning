@@ -3,3 +3,4 @@ from .CategoricalDQN import *
 from .DQN import *
 from .QuantileDQN import *
 from .ExpectileDQN import *
+from .A2C import *

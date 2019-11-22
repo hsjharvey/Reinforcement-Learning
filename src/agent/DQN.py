@@ -103,7 +103,6 @@ class DQNAgent:
         action_values, _ = self.target_network.predict(next_states)
         action_values_next = np.max(action_values, axis=2)
 
-        # match the rewards and the terminals from the memory to the same size as the quantiles_next
         rewards = rewards.reshape(action_values_next.shape)
         terminals = terminals.reshape((action_values_next.shape))
 
