@@ -24,7 +24,7 @@ class DQNNet:
                               input_shape=self.input_dim,  # input
                               kernel_initializer=self.config.weights_initializer,
                               activation='linear',
-                              activity_regularizer=self.config.regularizer,
+                              activity_regularizer=self.config.activity_regularizer,
                               name='fully_connect'
                               )(input_layer)
 

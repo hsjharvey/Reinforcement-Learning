@@ -28,7 +28,7 @@ class QuantileNet:
                               input_shape=self.input_dim,  # input
                               activation='linear',
                               kernel_initializer=self.config.weights_initializer,
-                              activity_regularizer=self.config.regularizer,
+                              activity_regularizer=self.config.activity_regularizer,
                               name='fully_connect'
                               )(input_layer)
 

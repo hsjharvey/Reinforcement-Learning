@@ -48,17 +48,17 @@ class A2Cagent:
             self.check = 0
 
             for step in range(self.steps):
-                _, actor_output, _ = self.A2C_network.predict(
+                actor_output, _ = self.A2C_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 # choose action according to the E-greedy policy
-                action = policies.epsilon_greedy(action_values=actor_output[0],
+                action = policies.epsilon_greedy(action_values=actor_output.reshape(self.config.action_dim),
                                                  episode=each_ep,
                                                  stop_explore=self.config.stop_explore,
                                                  total_actions=self.config.action_dim)
 
                 next_state, reward, done, _ = self.envs.step(action=action)
-                returns = self.config.gamma * reward  # calculate returns/discounted rewards
+                returns = self.config.discount_rate * reward  # calculate returns/discounted rewards
 
                 # record the per step history into replay buffer
                 self.replay_buffer.append([current_state.reshape(self.input_dim).tolist(), action,
@@ -91,8 +91,8 @@ class A2Cagent:
             replay_fn.uniform_random_replay(self.replay_buffer, self.batch_size)
 
         # step 2: get the optimal action values for the next state
-        log_action_prob, _, critic_values = self.A2C_network.predict(current_states)
-        self.A2C_network.log_action_prob = log_action_prob
+        actor_output, critic_values = self.A2C_network.predict(current_states)
+        self.A2C_network.log_action_prob = np.log(actor_output)
 
         self.A2C_network.fit(x=current_states, y=rewards, verbose=2, callbacks=[self.keras_check])
 

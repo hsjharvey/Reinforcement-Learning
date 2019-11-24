@@ -25,18 +25,18 @@ class Config:
                                                                       stddev=0.0001,
                                                                       seed=None)
 
-        self.optimizer = tf.keras.optimizers.RMSprop(lr=1e-3,  # learning rate
-                                                     clipnorm=1.0)  # gradient clipping
+        self.optimizer = tf.keras.optimizers.Adam(lr=1e-3,  # learning rate
+                                                  clipnorm=1.0)  # gradient clipping
 
-        self.regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
+        self.activity_regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
 
-        self.keras_checkpoint = [
-            tf.keras.callbacks.ModelCheckpoint(filepath='./results/saved_network_models/harvey.model',
-                                               save_weights_only=True,
-                                               mode='auto'),
-            tf.keras.callbacks.TensorBoard(log_dir='/logs'),
-            tf.keras.callbacks.EarlyStopping(patience=10, monitor='val_loss'),
-        ]
+        self.keras_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+            filepath='./results/saved_network_models/harvey.model',
+            save_weights_only=True,
+            mode='auto')
+        #     tf.keras.callbacks.TensorBoard(log_dir='/logs'),
+        #     tf.keras.callbacks.EarlyStopping(patience=10, monitor='val_loss'),
+        # ]
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0
@@ -46,6 +46,9 @@ class Config:
         # Quantile Regression DQN parameters
         self.num_quantiles = 20
         self.huber_loss_threshold = 1.0
+
+        # a2c
+        self.head_out_dim = 20
 
     def multi_GPU_support(self):
         pass
