@@ -15,6 +15,7 @@ class A2Cagent:
 
         self.envs = None
         self.A2C_network = self.base_network.nn_model()
+        self.best_network = tf.keras.models.clone_model(self.A2C_network)
 
         self.total_steps = 0
         self.episodes = config.episodes
@@ -69,7 +70,7 @@ class A2Cagent:
                 # reset the replay buffer
                 if len(list(self.replay_buffer)) == self.replay_buffer_size:
                     self.train_by_replay()
-                self.replay_buffer = deque()
+                    self.replay_buffer = deque()
 
                 # if episode is finished, break the inner loop
                 # otherwise, continue
@@ -80,6 +81,11 @@ class A2Cagent:
                     current_state = next_state
                     self.total_steps += 1
                     self.check += reward
+            # for any episode where the reward is higher
+            # we copy the actor network weights to the target network
+            if self.check > self.best_max:
+                self.best_max = self.check
+                self.best_network.set_weights(self.A2C_network.get_weights())
 
     def train_by_replay(self):
         """
@@ -87,14 +93,40 @@ class A2Cagent:
         """
         # step 1: generate replay samples (size = self.batch_size) from the replay buffer
         # e.g. uniform random replay or prioritize experience replay
-        current_states, actions, next_states, rewards, done = \
+        current_states, actions, next_states, returns, done = \
             replay_fn.uniform_random_replay(self.replay_buffer, self.batch_size)
 
-        # step 2: get the optimal action values for the next state
-        actor_output, critic_values = self.A2C_network.predict(current_states)
-        self.A2C_network.log_action_prob = np.log(actor_output)
+        returns = returns.reshape((-1, 1, 1))
 
-        self.A2C_network.fit(x=current_states, y=rewards, verbose=2, callbacks=[self.keras_check])
+        actor_output, critic_values = self.A2C_network.predict(current_states)
+
+        advantage = returns - critic_values
+        self.A2C_network.fit(x=current_states, y=[advantage, returns], verbose=2, callbacks=self.keras_check)
 
     def eval_step(self, render=True):
-        pass
+        """
+        Evaluation using the trained target network, no training involved
+        :param render: whether to visualize the evaluation or not
+        """
+        for each_ep in range(self.config.evaluate_episodes):
+            current_state = self.envs.reset()
+
+            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('-' * 64)
+            self.check = 0
+
+            for step in range(self.steps):
+                action_values, _ = self.best_network.predict(
+                    np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
+                action = np.argmax(action_values.reshape(self.config.action_dim))
+
+                next_state, reward, done, _ = self.envs.step(action=action)
+
+                if render:
+                    self.envs.render(mode=['human'])
+
+                if done:
+                    break
+                else:
+                    current_state = next_state
+                    self.check += 1

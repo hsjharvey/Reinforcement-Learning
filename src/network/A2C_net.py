@@ -11,7 +11,6 @@ class ActorCriticNet:
         self.num_atoms = config.Categorical_n_atoms
         self.input_dim = config.input_dim
         self.action_dim = config.action_dim
-        self.log_action_prob = 0.0
 
         self.optimizer = config.optimizer
 
@@ -28,13 +27,13 @@ class ActorCriticNet:
 
         actor_output = Dense(units=self.action_dim,
                              use_bias=False,
-                             activation='linear',
+                             activation='softmax',
                              kernel_initializer=self.config.weights_initializer,
                              activity_regularizer=self.config.activity_regularizer,
                              name='actor_net'
                              )(shared_net_head)
 
-        actor_output = Softmax(axis=-1)(actor_output)
+        self.log_action_prob = tf.math.log(actor_output)
 
         critic_output = Dense(units=1,  # critic value
                               use_bias=False,
@@ -53,7 +52,7 @@ class ActorCriticNet:
 
         # the loss values in a2c are very complicated.
         self.net_model.compile(
-            loss=[self.actor_net_loss, self.critic_net_loss],
+            loss={'actor_net': self.actor_net_loss, 'critic_net': self.critic_net_loss},
             optimizer=self.optimizer,
         )
 
@@ -64,11 +63,15 @@ class ActorCriticNet:
     def actor_net_loss(self, y_true, y_predict):
         """
         actor network loss function
-        :param y_true: returns (discounted rewards)
-        :param y_predict: value predicted by critic_net
+        cite: https://github.com/germain-hug/Deep-RL-Keras
+        :param y_true: advantage (returns/discounted reward - critic_value)
+        :param y_predict: predicted_probability of actions from the actor net
         :return: loss function
         """
-        return - tf.reduce_mean(self.log_action_prob * (y_true - y_predict))
+        weighted_actions = tf.reduce_sum(np.arange(self.config.action_dim) * y_predict, axis=2)
+        entropy = tf.reduce_sum(weighted_actions * tf.math.log(weighted_actions))
+        eligibility = tf.math.log((weighted_actions + 1e-10) * y_true)
+        return 0.0001 * entropy - 0.0001 * tf.reduce_sum(eligibility)
 
     def critic_net_loss(self, y_true, y_predict):
         """

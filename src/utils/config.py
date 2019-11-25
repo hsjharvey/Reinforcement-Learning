@@ -8,7 +8,8 @@ class Config:
         self.input_dim = (1, 4)  # input feature dimension
         self.action_dim = 2  # agent action dimension (generally consider part of the environment)
 
-        self.episodes = 1000
+        self.episodes = 500
+        self.evaluate_episodes = 100
         self.steps = 200  # note that OpenAI gym has max environment steps (e.g. max_step = 200 for CartPole)
 
         # general RL agent parameters
@@ -30,13 +31,12 @@ class Config:
 
         self.activity_regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
 
-        self.keras_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        self.keras_checkpoint = [tf.keras.callbacks.ModelCheckpoint(
             filepath='./results/saved_network_models/harvey.model',
-            save_weights_only=True,
-            mode='auto')
-        #     tf.keras.callbacks.TensorBoard(log_dir='/logs'),
-        #     tf.keras.callbacks.EarlyStopping(patience=10, monitor='val_loss'),
-        # ]
+            save_weights_only=True, mode='auto'),
+            tf.keras.callbacks.TensorBoard(log_dir='./results/logs'),
+            tf.keras.callbacks.EarlyStopping(patience=10, monitor='loss'),
+        ]
 
         # categorical DQN parameters
         self.Categorical_Vmin = 0

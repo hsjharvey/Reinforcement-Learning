@@ -123,21 +123,21 @@ class QuantileDQNAgent:
         quantile_next = rewards + discount_rate * quantile_next
 
         # update actor network weights
-        self.actor_network.fit(x=current_states, y=quantile_next, verbose=2, callbacks=[self.keras_check])
+        self.actor_network.fit(x=current_states, y=quantile_next, verbose=2, callbacks=self.keras_check)
 
     def eval_step(self, render=True):
         """
         Evaluation using the trained target network, no training involved
         :param render: whether to visualize the evaluation or not
         """
-        for each_ep in range(100):
+        for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
             print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
             print('-' * 64)
             self.check = 0
 
-            for step in range(200):
+            for step in range(self.steps):
                 quantile_values, _ = self.target_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)

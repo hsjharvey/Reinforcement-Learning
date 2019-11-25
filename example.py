@@ -51,7 +51,7 @@ def run_A2C_example():
     print("finish training")
     print('=' * 64)
     print("evaluating.....")
-    # cat.eval_step(render=True)
+    A2C.eval_step(render=True)
 
 
 if __name__ == '__main__':
