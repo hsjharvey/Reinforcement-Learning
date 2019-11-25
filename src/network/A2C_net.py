@@ -11,6 +11,7 @@ class ActorCriticNet:
         self.num_atoms = config.Categorical_n_atoms
         self.input_dim = config.input_dim
         self.action_dim = config.action_dim
+        self.net_model = None
 
         self.optimizer = config.optimizer
 
@@ -33,8 +34,6 @@ class ActorCriticNet:
                              name='actor_net'
                              )(shared_net_head)
 
-        self.log_action_prob = tf.math.log(actor_output)
-
         critic_output = Dense(units=1,  # critic value
                               use_bias=False,
                               activation='linear',
@@ -42,8 +41,6 @@ class ActorCriticNet:
                               activity_regularizer=self.config.activity_regularizer,
                               name='critic_net'
                               )(shared_net_head)
-
-        # log probability
 
         self.net_model = tf.keras.models.Model(
             inputs=[input_layer],
