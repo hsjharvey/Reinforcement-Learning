@@ -46,12 +46,12 @@ class QuantileNet:
         idx = tf.transpose([tf.range(tf.shape(output_layers)[0]), idx])
 
         # the final result is a [batch_size, quantiles] tensor for optimal actions
-        actorNet_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
+        actor_net_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
 
         # tensorflow keras: to set up the neural network itself.
         self.net_model = tf.keras.models.Model(
             inputs=input_layer,
-            outputs=[output_layers, actorNet_output_argmax]
+            outputs=[output_layers, actor_net_output_argmax]
         )
 
         # we update the weights according to the loss of quantiles of optimal actions from both
@@ -66,23 +66,23 @@ class QuantileNet:
 
         return self.net_model
 
-    def quantile_huber_loss(self, y_true, y_predict):
+    def quantile_huber_loss(self, quantile_next, quantile_predict):
         """
         The loss function that is passed to the network
-        :param y_true: True label, quantiles_next
-        :param y_predict: predicted label, quantiles
+        :param quantile_next: True label, quantiles_next
+        :param quantile_predict: predicted label, quantiles
         :return: quantile huber loss between the target quantiles and the quantiles
         """
-        diff = y_true - y_predict
+        diff = quantile_next - quantile_predict
 
-        model_loss = tf.reduce_mean(
+        target_loss = tf.reduce_mean(
             (self.huber_loss(diff) *
              tf.abs(self.cum_density - tf.cast(diff < 0, dtype=tf.float32))),
             axis=0)
 
         regularization_loss = tf.add_n(self.net_model.losses)
 
-        total_loss = tf.add_n([tf.reduce_sum(model_loss), regularization_loss])
+        total_loss = tf.add_n([tf.reduce_sum(target_loss), regularization_loss])
 
         return total_loss
 

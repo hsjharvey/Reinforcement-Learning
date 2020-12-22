@@ -36,7 +36,7 @@ So far I've only tested all algorithms on [CartPole](https://github.com/openai/g
 * (Expectile) [Statistics and Samples in Distributional Reinforcement Learning](https://arxiv.org/abs/1902.08102)
 * (Quantile) [Distributional Reinforcement Learning with Quantile Regression](https://arxiv.org/abs/1710.10044)
 * [An Analysis of Categorical Distributional Reinforcement Learning](https://arxiv.org/abs/1802.08163)
-* [Implicit Quantile Networks for Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
+* (Quantile) [Implicit Quantile Networks for Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
 * [A Comparative Analysis of Expected and Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
 
 
