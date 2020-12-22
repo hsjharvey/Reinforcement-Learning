@@ -47,6 +47,9 @@ class Config:
         self.num_quantiles = 20
         self.huber_loss_threshold = 1.0
 
+        # Expetile ER-DQN parameters
+        self.num_expectiles = 11
+
         # a2c
         self.head_out_dim = 20
 
