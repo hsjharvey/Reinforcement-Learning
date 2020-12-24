@@ -8,8 +8,8 @@ class Config:
         self.input_dim = (1, 4)  # input feature dimension
         self.action_dim = 2  # agent action dimension (generally consider part of the environment)
 
-        self.episodes = 500
-        self.evaluate_episodes = 100
+        self.episodes = 100
+        self.evaluate_episodes = 20
         self.steps = 200  # note that OpenAI gym has max environment steps (e.g. max_step = 200 for CartPole)
 
         # general RL agent parameters
@@ -49,6 +49,7 @@ class Config:
 
         # Expetile ER-DQN parameters
         self.num_expectiles = 11
+        self.imputation_distribution_bounds = tuple((-5, 5) for _ in range(self.num_expectiles))
 
         # a2c
         self.head_out_dim = 20

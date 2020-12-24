@@ -2,7 +2,7 @@
 import tensorflow as tf
 from src.utils.config import *
 import numpy as np
-from tensorflow.keras.layers import Input, Dense, Reshape, Softmax
+from tensorflow.keras.layers import Input, Dense, Reshape, Softmax, Lambda
 
 
 class ExpectileNet:
@@ -13,12 +13,13 @@ class ExpectileNet:
         self.num_expectiles = config.num_expectiles
         self.output_dim = self.action_dim * self.num_expectiles
 
+        self.batch_size = self.config.batch_size
+
         self.optimizer = config.optimizer
         self.net_model = None
 
-        # note that tau_6 = 0.5 and thus this expectile statistic is in fact the mean
-        # tau
-        self.cum_density = np.linspace(0.01, 0.99, config.num_expectiles)
+        # note that middle expectile statistic is in fact the mean, i.e. tau_{middle}
+        self.cum_density = tf.linspace(0.01, 0.99, config.num_expectiles)
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
@@ -35,9 +36,10 @@ class ExpectileNet:
         # processing layers ==> reshape, no training variables
         output_layers = Reshape((self.action_dim, self.num_expectiles))(output_layers)
 
-        # get the action values
+        # get the action values <=> mid expectile
         # tf.cast is to cast the action values to int32
-        action_values = tf.gather_nd(params=output_layers, indices=[[0, 0, 6], [0, 1, 6]])
+        action_values = output_layers[:, :, 6]
+
         action = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
 
         # to get the optimal action expectiles
@@ -46,12 +48,12 @@ class ExpectileNet:
         idx = tf.transpose([tf.range(tf.shape(output_layers)[0]), action])
 
         # the final result is a [batch_size, expectiles] tensor for optimal actions
-        actor_net_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
+        optimal_action_expectiles = tf.gather_nd(params=output_layers, indices=idx)
 
         # tensorflow keras: to set up the neural network itself.
         self.net_model = tf.keras.models.Model(
             inputs=input_layer,
-            outputs=[output_layers, actor_net_output_argmax]
+            outputs=[output_layers, optimal_action_expectiles]
         )
 
         # we update the weights according to the loss of expectiles of optimal actions from both
@@ -69,8 +71,22 @@ class ExpectileNet:
     def expectile_regression_loss(self, y_true, y_predict):
         """
         The loss function that is passed to the network
-        :param y_true: True label, expectiles_next
-        :param y_predict: predicted label, expectiles
-        :return: expectile huber loss between the target expectile and the expectile
+        :param y_true: True label, distribution after imputation
+        :param y_predict: predicted label, expectile_predict
+        :return: expectile loss between the target expectile and the predicted expectile
         """
-        diff = y_true - y_predict
+        val = 0
+        for i in range(self.batch_size):
+            expectile_predict = y_predict[i]
+
+            for j in range(tf.shape(y_true)[1]):
+                diff = tf.square(expectile_predict - y_true[j])
+                diff = tf.where(diff < 0, self.cum_density[j] * diff, (1 - self.cum_density[j]) * diff)
+
+            val += tf.reduce_sum(diff)
+
+        regularization_loss = tf.add_n(self.net_model.losses)
+
+        total_loss = tf.add_n([val, regularization_loss])
+
+        return total_loss
