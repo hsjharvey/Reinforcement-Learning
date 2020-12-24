@@ -3,8 +3,19 @@ A practice module of some RL algorithms, implemented in
 [Tensorflow Keras](https://www.tensorflow.org/guide/keras) 
 and [OpenAI gym](https://github.com/openai/gym) framework. 
 
-## General
-I implement RL algorithms in this repo to better understand them.
+## Updates:
+- 24/12/2020: 
+    - Fixed errors in C51 and QRDQN due to package updates. Convergence is attainable in both C51 and QRDQN.
+    - Finished a draft version of ERDQN. However, the performance is pretty poor. Not sure if this is due to parameter choice or bugs.
+    - I am in the process of writing a technical guide on implementing the three main distributional RL (Categorical, Quantile and Expectile) algorithms.
+
+## General:
+- I implement RL algorithms in this repo to better understand them. 
+- I tend to focus on the RL part rather than the network structure. Therefore, the network structure of the algorithms in this report is pretty simple.
+- My own research is related to distributional RL so I spend most of my effort implementing distributional RL algorithms. 
+- Implementation of neural networks has improved/changed dramatically over the past three years. Unfortunately I was not able to keep up with the trends since my own research did not focus on the network structure. For sure some code are not efficient, everytime there is a major shift in the packages (OpenAI gym, tensorflow), I merely change the code so that they can work.
+- I hope the generic algorithm structure helps.
+
  
 ## Environment:
 So far I've only tested all algorithms on [CartPole](https://github.com/openai/gym/wiki/CartPole-v0).
@@ -16,27 +27,27 @@ So far I've only tested all algorithms on [CartPole](https://github.com/openai/g
 - [x] Deep Q Network
 - [x] Categorical DQN (C51)
 - [x] Quantile DQN
-- [ ] Expectile DQN
+- [x] Expectile DQN
 
-## Prerequisites
-* [Python 3.6](https://www.python.org/)
+## Prerequisites (testing environment)
+* [Python 3.8](https://www.python.org/)
 * [Numpy](http://www.numpy.org/)
 * [Scipy](https://www.scipy.org/)
 * [Tensorflow](https://www.tensorflow.org/)
 * [OpenAI-gym](https://github.com/openai/gym)
 
 
-```examples.py``` contains examples for all implemented algorithms.
+[```examples.py```](./example.py) contains examples for all implemented algorithms.
 
 ## References
 * [Reinforcement Learning](http://incompleteideas.net/book/RLbook2018.pdf)
 * [Deep Q-Learning (DQN)](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf)
 * [Advantage Actor Critic (A2C)](https://papers.nips.cc/paper/1786-actor-critic-algorithms.pdf)
 * (C51) [A Distributional Perspective on Reinforcement Learning](https://arxiv.org/abs/1707.06887)
-* (Expectile) [Statistics and Samples in Distributional Reinforcement Learning](https://arxiv.org/abs/1902.08102)
-* (Quantile) [Distributional Reinforcement Learning with Quantile Regression](https://arxiv.org/abs/1710.10044)
+* (ER-DQN) [Statistics and Samples in Distributional Reinforcement Learning](https://arxiv.org/abs/1902.08102)
+* (QR-DQN) [Distributional Reinforcement Learning with Quantile Regression](https://arxiv.org/abs/1710.10044)
 * [An Analysis of Categorical Distributional Reinforcement Learning](https://arxiv.org/abs/1802.08163)
-* (Quantile) [Implicit Quantile Networks for Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
+* [Implicit Quantile Networks for Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
 * [A Comparative Analysis of Expected and Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
 
 

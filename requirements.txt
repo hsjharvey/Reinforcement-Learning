@@ -1,5 +1,5 @@
-gym>=0.13.0
-keras>=2.2.4
-tensorflow>=2.0.0b1
+gym
+keras
+tensorflow
 scipy
 numpy
