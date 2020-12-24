@@ -38,20 +38,20 @@ class QuantileNet:
         # get the action values
         # tf.cast is to cast the action values to int32
         action_values = tf.reduce_sum(output_layers, axis=2)
-        idx = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
+        action = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
 
         # to get the optimal action quantiles
         # size = [batch_size, 2 actions, quantiles per action]
         # we need to generate the correct index, size = [batch_size, argmax index]
-        idx = tf.transpose([tf.range(tf.shape(output_layers)[0]), idx])
+        idx = tf.transpose([tf.range(tf.shape(output_layers)[0]), action])
 
         # the final result is a [batch_size, quantiles] tensor for optimal actions
-        actor_net_output_argmax = tf.gather_nd(params=output_layers, indices=idx)
+        optimal_action_quantiles = tf.gather_nd(params=output_layers, indices=idx)
 
         # tensorflow keras: to set up the neural network itself.
         self.net_model = tf.keras.models.Model(
             inputs=input_layer,
-            outputs=[output_layers, actor_net_output_argmax]
+            outputs=[output_layers, optimal_action_quantiles, action_values]
         )
 
         # we update the weights according to the loss of quantiles of optimal actions from both
@@ -66,14 +66,14 @@ class QuantileNet:
 
         return self.net_model
 
-    def quantile_huber_loss(self, quantile_next, quantile_predict):
+    def quantile_huber_loss(self, y_true, y_predict):
         """
         The loss function that is passed to the network
-        :param quantile_next: True label, quantiles_next
-        :param quantile_predict: predicted label, quantiles
+        :param y_true: True label, quantiles_next, [batch_size, num_quantiles]
+        :param y_predict: predicted label, quantiles, [batch_size, num_quantiles]
         :return: quantile huber loss between the target quantiles and the quantiles
         """
-        diff = quantile_next - quantile_predict
+        diff = y_true - y_predict
 
         target_loss = tf.reduce_mean(
             (self.huber_loss(diff) *
@@ -89,6 +89,6 @@ class QuantileNet:
     def huber_loss(self, item):
         return tf.where(
             tf.abs(item) < self.k,
-            0.5 * np.power(item, 2),
+            0.5 * tf.square(item),
             self.k * (tf.abs(item) - 0.5 * self.k)
         )

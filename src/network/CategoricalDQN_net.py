@@ -57,7 +57,7 @@ class CategoricalNet:
         )
 
         self.net_model.compile(
-            loss=[None, 'categorical_cross_entropy'],  # apply loss function only to the second output
+            loss=[None, 'categorical_crossentropy'],  # apply loss function only to the second output
             optimizer=self.optimizer
 
         )

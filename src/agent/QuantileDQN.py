@@ -57,7 +57,7 @@ class QuantileDQNAgent:
                 # neural network returns quantile value
                 # action value (Q): take the mean of the quantile value for each action
                 # since we assume equal-size quantiles
-                quantile_values, _ = self.actor_network.predict(
+                quantile_values, _, x = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)
 
@@ -107,7 +107,7 @@ class QuantileDQNAgent:
 
         # step 2: get the next state quantiles
         # and choose the optimal actions from next state quantiles
-        quantile_next, _ = self.target_network.predict(next_states)
+        quantile_next, _, x = self.target_network.predict(next_states)
         action_value_next = quantile_next.mean(-1)
         action_next = np.argmax(action_value_next, axis=1)
 
