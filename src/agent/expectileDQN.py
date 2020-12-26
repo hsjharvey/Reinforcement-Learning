@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from src.utils import *
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, root
 import tensorflow as tf
 from collections import deque
 import gym
@@ -32,7 +32,7 @@ class ExpectileDQNAgent:
 
         self.keras_check = config.keras_checkpoint
 
-        self.check = 0
+        self.check_model_improved = 0
         self.best_max = 0
         # note that tau_6 = 0.5 and thus this expectile statistic is in fact the mean
         # tau
@@ -52,9 +52,9 @@ class ExpectileDQNAgent:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Max_Reward: {}'.format(each_ep, self.check_model_improved, self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 # neural network returns quantile value
@@ -90,12 +90,12 @@ class ExpectileDQNAgent:
                 else:
                     current_state = next_state
                     self.total_steps += 1
-                    self.check += reward
+                    self.check_model_improved += reward
 
             # for any episode where the reward is higher
             # we copy the actor network weights to the target network
-            if self.check > self.best_max:
-                self.best_max = self.check
+            if self.check_model_improved > self.best_max:
+                self.best_max = self.check_model_improved
                 self.target_network.set_weights(self.actor_network.get_weights())
 
     def train_by_replay(self):
@@ -147,9 +147,10 @@ class ExpectileDQNAgent:
         for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved,
+                                                                          self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 expectile_value, _ = self.target_network.predict(
@@ -167,30 +168,39 @@ class ExpectileDQNAgent:
                     break
                 else:
                     current_state = next_state
-                    self.check += 1
+                    self.check_model_improved += 1
 
-    def imputation_strategy(self, expectile_next):
-        result_collection = []
-        for each_expectile in expectile_next:
-            start_vals = np.random.uniform(0, 1, size=self.num_expectiles)
+    def imputation_strategy(self, expectile_next_batch):
+        result_collection = np.zeros(shape=(self.batch_size, self.num_expectiles))
+        for idx in range(self.batch_size):
+            start_vals = np.linspace(self.config.z_val_limits[0], self.config.z_val_limits[1], self.num_expectiles)
+            # # To be discussed, I think this is pretty much problem-dependent
+            # # The bounds here limit the possible options of z
+            # # Having bounds could potentially prevent crazy z
+            # bnds = self.config.imputation_distribution_bounds
+            # results = minimize(self.minimize_objective_fc, args=(expectile_next_batch[idx, :]),
+            #                    x0=start_vals, bounds=bnds, method="SLSQP")
 
-            # To be discussed, I think this is pretty much problem-dependent
-            # The bounds here limit the possible options of z
-            # Having bounds could potentially prevent crazy z
-            bounds = self.config.imputation_distribution_bounds
+            # # root method
+            results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]), x0=start_vals)
 
-            results = minimize(self.objective_fc, args=(each_expectile), x0=start_vals, bounds=bounds, method="SLSQP")
-
-            result_collection.append(results.x)
-
+            # print(results)
+            result_collection[idx, :] = results.x
         return np.array(result_collection)
 
-    def objective_fc(self, x, exp):
-        val = 0
-        for idx, item in enumerate(x):
-            diff = exp - item
-            diff = np.where(diff < 0, self.cum_density[idx] * diff, (1 - self.cum_density[idx]) * diff)
+    def minimize_objective_fc(self, x, expect_set):
+        vals = 0
+        for idx, each_expectile in enumerate(expect_set):
+            diff = x - each_expectile
+            diff = np.where(diff > 0, - self.cum_density[idx] * diff, - (1 - self.cum_density[idx]) * diff)
+            vals += np.square(np.mean(diff))
 
-            val += np.square(np.sum(diff))
+        return vals
 
-        return val
+    def root_objective_fc(self, x, expect_set):
+        vals = []
+        for idx, each_expectile in enumerate(expect_set):
+            diff = x - each_expectile
+            diff = np.where(diff > 0, - self.cum_density[idx] * diff, - (1 - self.cum_density[idx]) * diff)
+            vals.append(np.mean(diff))
+        return vals

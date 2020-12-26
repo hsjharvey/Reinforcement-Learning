@@ -15,7 +15,7 @@ class ExpectileNet:
 
         self.batch_size = self.config.batch_size
 
-        self.optimizer = config.optimizer
+        self.optimizer = config.network_optimizer
         self.net_model = None
 
         # note that middle expectile statistic is in fact the mean, i.e. tau_{middle}
@@ -38,7 +38,7 @@ class ExpectileNet:
 
         # get the action values <=> mid expectile
         # tf.cast is to cast the action values to int32
-        action_values = output_layers[:, :, 6]
+        action_values = output_layers[:, :, int(self.num_expectiles / 2) + 1]
 
         action = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
 
@@ -71,22 +71,25 @@ class ExpectileNet:
     def expectile_regression_loss(self, y_true, y_predict):
         """
         The loss function that is passed to the network
-        :param y_true: True label, distribution after imputation
-        :param y_predict: predicted label, expectile_predict
+        :param y_true: True label, distribution after imputation (batch_size, number of z values)
+        :param y_predict: predicted label, expectile_predict (batch_size, number of expectiles)
         :return: expectile loss between the target expectile and the predicted expectile
         """
-        val = 0
+        loss_val = 0
         for i in range(self.batch_size):
             expectile_predict = y_predict[i]
+            z = y_true[i]
 
-            for j in range(tf.shape(y_true)[1]):
-                diff = tf.square(expectile_predict - y_true[j])
-                diff = tf.where(diff < 0, self.cum_density[j] * diff, (1 - self.cum_density[j]) * diff)
+            for k in range(self.num_expectiles):
+                diff = z - expectile_predict[k]
+                diff_square = tf.square(diff)
 
-            val += tf.reduce_sum(diff)
+                er_loss = tf.reduce_mean(tf.where(diff > 0, self.cum_density[k] * diff_square,
+                                                  (1 - self.cum_density[k]) * diff_square))
+                # sum over all kth statistics, and sum over the entire batch
+                loss_val += er_loss
 
         regularization_loss = tf.add_n(self.net_model.losses)
-
-        total_loss = tf.add_n([val, regularization_loss])
+        total_loss = tf.add_n([loss_val, regularization_loss])
 
         return total_loss
