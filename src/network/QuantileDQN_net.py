@@ -13,7 +13,7 @@ class QuantileNet:
         self.action_dim = config.action_dim
         self.output_dim = self.action_dim * self.num_quantiles
 
-        self.optimizer = config.optimizer
+        self.optimizer = config.network_optimizer
         self.net_model = None
 
         self.k = config.huber_loss_threshold
@@ -51,7 +51,7 @@ class QuantileNet:
         # tensorflow keras: to set up the neural network itself.
         self.net_model = tf.keras.models.Model(
             inputs=input_layer,
-            outputs=[output_layers, optimal_action_quantiles, action_values]
+            outputs=[output_layers, optimal_action_quantiles]
         )
 
         # we update the weights according to the loss of quantiles of optimal actions from both

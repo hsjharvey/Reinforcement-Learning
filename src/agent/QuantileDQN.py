@@ -32,7 +32,7 @@ class QuantileDQNAgent:
 
         self.keras_check = config.keras_checkpoint
 
-        self.check = 0
+        self.check_model_improved = 0
         self.best_max = 0
 
     def transition(self):
@@ -49,15 +49,15 @@ class QuantileDQNAgent:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Max_Reward: {}'.format(each_ep, self.check_model_improved, self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 # neural network returns quantile value
                 # action value (Q): take the mean of the quantile value for each action
                 # since we assume equal-size quantiles
-                quantile_values, _, x = self.actor_network.predict(
+                quantile_values, _ = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
                 action_value = quantile_values.mean(-1)
 
@@ -88,12 +88,12 @@ class QuantileDQNAgent:
                 else:
                     current_state = next_state
                     self.total_steps += 1
-                    self.check += reward
+                    self.check_model_improved += reward
 
             # for any episode where the reward is higher
             # we copy the actor network weights to the target network
-            if self.check > self.best_max:
-                self.best_max = self.check
+            if self.check_model_improved > self.best_max:
+                self.best_max = self.check_model_improved
                 self.target_network.set_weights(self.actor_network.get_weights())
 
     def train_by_replay(self):
@@ -107,7 +107,7 @@ class QuantileDQNAgent:
 
         # step 2: get the next state quantiles
         # and choose the optimal actions from next state quantiles
-        quantile_next, _, x = self.target_network.predict(next_states)
+        quantile_next, _ = self.target_network.predict(next_states)
         action_value_next = quantile_next.mean(-1)
         action_next = np.argmax(action_value_next, axis=1)
 
@@ -133,9 +133,10 @@ class QuantileDQNAgent:
         for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved,
+                                                                          self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 quantile_values, _ = self.target_network.predict(
@@ -153,4 +154,4 @@ class QuantileDQNAgent:
                     break
                 else:
                     current_state = next_state
-                    self.check += 1
+                    self.check_model_improved += 1
