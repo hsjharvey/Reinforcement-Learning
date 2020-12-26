@@ -4,6 +4,9 @@ A practice module of some RL algorithms, implemented in
 and [OpenAI gym](https://github.com/openai/gym) framework. 
 
 ## Updates:
+- 26/12/2020:
+    - Finished ER-DQN but the performance is very fragile.
+    - Working on technical guide of implementation.
 - 24/12/2020: 
     - Fixed errors in C51 and QRDQN due to package updates. Convergence is attainable in both C51 and QRDQN.
     - Finished a draft version of ERDQN. However, the performance is pretty poor. Not sure if this is due to parameter choice or bugs.

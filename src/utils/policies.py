@@ -13,7 +13,7 @@ def epsilon_greedy(action_values, total_actions, episode=0, stop_explore=10):
 
     if episode < stop_explore:
         random_draw = np.random.random()
-        exploration = 0.9 ** np.exp(0.1 * episode)
+        exploration = 0.9 ** np.exp(0.05 * episode)
 
         if random_draw < exploration:
             return np.random.random_integers(0, total_actions - 1)

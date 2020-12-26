@@ -37,6 +37,7 @@ class ExpectileDQNAgent:
         # note that tau_6 = 0.5 and thus this expectile statistic is in fact the mean
         # tau
         self.cum_density = np.linspace(0.01, 0.99, config.num_expectiles)
+        self.imputation_method = config.imputation_method
 
     def transition(self):
         """
@@ -174,25 +175,25 @@ class ExpectileDQNAgent:
         result_collection = np.zeros(shape=(self.batch_size, self.num_expectiles))
         for idx in range(self.batch_size):
             start_vals = np.linspace(self.config.z_val_limits[0], self.config.z_val_limits[1], self.num_expectiles)
-            # # To be discussed, I think this is pretty much problem-dependent
-            # # The bounds here limit the possible options of z
-            # # Having bounds could potentially prevent crazy z
-            # bnds = self.config.imputation_distribution_bounds
-            # results = minimize(self.minimize_objective_fc, args=(expectile_next_batch[idx, :]),
-            #                    x0=start_vals, bounds=bnds, method="SLSQP")
 
-            # # root method
-            results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]), x0=start_vals)
+            if self.imputation_method == "minimization":
+                # To be discussed, I think this is pretty much problem-dependent
+                # The bounds here limit the possible options of z
+                # Having bounds could potentially prevent crazy z
+                bnds = self.config.imputation_distribution_bounds
+                optimization_results = minimize(self.minimize_objective_fc, args=(expectile_next_batch[idx, :]),
+                                                x0=start_vals, bounds=bnds, method="SLSQP")
+            elif self.imputation_method == "root":
+                optimization_results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]), x0=start_vals)
 
-            # print(results)
-            result_collection[idx, :] = results.x
-        return np.array(result_collection)
+            result_collection[idx, :] = optimization_results.x
+        return result_collection
 
     def minimize_objective_fc(self, x, expect_set):
         vals = 0
         for idx, each_expectile in enumerate(expect_set):
             diff = x - each_expectile
-            diff = np.where(diff > 0, - self.cum_density[idx] * diff, - (1 - self.cum_density[idx]) * diff)
+            diff = np.where(diff > 0, - self.cum_density[idx] * diff, (self.cum_density[idx] - 1) * diff)
             vals += np.square(np.mean(diff))
 
         return vals
@@ -201,6 +202,6 @@ class ExpectileDQNAgent:
         vals = []
         for idx, each_expectile in enumerate(expect_set):
             diff = x - each_expectile
-            diff = np.where(diff > 0, - self.cum_density[idx] * diff, - (1 - self.cum_density[idx]) * diff)
+            diff = np.where(diff > 0, - self.cum_density[idx] * diff, (self.cum_density[idx] - 1) * diff)
             vals.append(np.mean(diff))
         return vals

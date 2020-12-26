@@ -9,7 +9,7 @@ class Config:
         self.action_dim = 2  # agent action dimension (generally consider part of the environment)
 
         self.episodes = 500
-        self.evaluate_episodes = 20
+        self.evaluate_episodes = 50
         self.steps = 200  # note that OpenAI gym has max environment steps (e.g. max_step = 200 for CartPole)
 
         # general RL agent parameters
@@ -46,6 +46,7 @@ class Config:
         self.num_expectiles = 11
         self.z_val_limits = (-10, 10)
         self.imputation_distribution_bounds = tuple(self.z_val_limits for _ in range(self.num_expectiles))
+        self.imputation_method = "root"  # root or minimization
 
         # a2c parameters
         self.head_out_dim = 20
