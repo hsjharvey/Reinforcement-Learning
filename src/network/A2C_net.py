@@ -8,12 +8,11 @@ from tensorflow.keras.layers import Input, Dense, Reshape, Softmax
 class ActorCriticNet:
     def __init__(self, config):
         self.config = config
-        self.num_atoms = config.Categorical_n_atoms
         self.input_dim = config.input_dim
         self.action_dim = config.action_dim
         self.net_model = None
 
-        self.optimizer = config.optimizer
+        self.optimizer = config.network_optimizer
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_representation_head')

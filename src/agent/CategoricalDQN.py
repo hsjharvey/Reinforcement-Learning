@@ -12,14 +12,14 @@ class CategoricalDQNAgent:
         self.base_network = base_network
 
         self.input_dim = config.input_dim  # neural network input dimension
-        self.n_atoms = config.Categorical_n_atoms
-        self.vmin = config.Categorical_Vmin
-        self.vmax = config.Categorical_Vmax
+        self.n_atoms = config.categorical_n_atoms
+        self.vmin = config.categorical_Vmin
+        self.vmax = config.categorical_Vmax
 
         self.atoms = np.linspace(
-            config.Categorical_Vmin,
-            config.Categorical_Vmax,
-            config.Categorical_n_atoms,
+            config.categorical_Vmin,
+            config.categorical_Vmax,
+            config.categorical_n_atoms,
         )  # Z
 
         self.envs = None
@@ -35,11 +35,11 @@ class CategoricalDQNAgent:
         self.replay_buffer_size = config.replay_buffer_size
         self.replay_buffer = deque()
 
-        self.delta_z = (config.Categorical_Vmax - config.Categorical_Vmin) / float(config.Categorical_n_atoms - 1)
+        self.delta_z = (config.categorical_Vmax - config.categorical_Vmin) / float(config.categorical_n_atoms - 1)
 
         self.keras_check = config.keras_checkpoint
 
-        self.check = 0
+        self.check_model_improved = 0
         self.best_max = 0
 
     def transition(self):
@@ -55,9 +55,9 @@ class CategoricalDQNAgent:
         """
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
-            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check_model_improved, self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 # reshape the input state to a tensor ===> Network ===> action probabilities
@@ -96,12 +96,12 @@ class CategoricalDQNAgent:
                 else:
                     current_state = next_state
                     self.total_steps += 1
-                    self.check += reward
+                    self.check_model_improved += reward
 
             # for any episode where the reward is higher
             # we copy the actor network weights to the target network
-            if self.check > self.best_max:
-                self.best_max = self.check
+            if self.check_model_improved > self.best_max:
+                self.best_max = self.check_model_improved
                 self.target_network.set_weights(self.actor_network.get_weights())
 
     def train_by_replay(self):
@@ -143,7 +143,7 @@ class CategoricalDQNAgent:
         atoms_next = np.clip(atoms_next, self.vmin, self.vmax)
 
         # calculate the floors and ceilings of atom_next
-        b = (atoms_next - self.config.Categorical_Vmin) / self.delta_z
+        b = (atoms_next - self.config.categorical_Vmin) / self.delta_z
         l, u = np.floor(b).astype(int), np.ceil(b).astype(int)
 
         # it is important to check if l == u, to avoid histogram collapsing.
@@ -175,9 +175,10 @@ class CategoricalDQNAgent:
         for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved,
+                                                                          self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 action_prob, _ = self.target_network.predict(
@@ -195,4 +196,4 @@ class CategoricalDQNAgent:
                     break
                 else:
                     current_state = next_state
-                    self.check += 1
+                    self.check_model_improved += 1

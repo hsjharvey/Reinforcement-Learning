@@ -8,18 +8,18 @@ from tensorflow.keras.layers import Input, Dense, Reshape, Softmax
 class CategoricalNet:
     def __init__(self, config):
         self.config = config
-        self.num_atoms = config.Categorical_n_atoms
+        self.num_atoms = config.categorical_n_atoms
         self.input_dim = config.input_dim
         self.action_dim = config.action_dim
         self.output_dim = self.action_dim * self.num_atoms
 
-        self.optimizer = config.optimizer
+        self.optimizer = config.network_optimizer
         self.net_model = None
 
         self.atoms = tf.linspace(
-            float(config.Categorical_Vmin),
-            float(config.Categorical_Vmax),
-            config.Categorical_n_atoms,
+            float(config.categorical_Vmin),
+            float(config.categorical_Vmax),
+            config.categorical_n_atoms,
         )  # Z
 
     def nn_model(self):

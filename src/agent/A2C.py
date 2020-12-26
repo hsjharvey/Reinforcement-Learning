@@ -27,7 +27,7 @@ class A2Cagent:
 
         self.keras_check = config.keras_checkpoint
 
-        self.check = 0
+        self.check_model_improved = 0
         self.best_max = 0
 
     def transition(self):
@@ -44,9 +44,9 @@ class A2Cagent:
         for each_ep in range(self.episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {} Reward: {} Max_Reward: {}'.format(each_ep, self.check_model_improved, self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 actor_output, _ = self.A2C_network.predict(
@@ -80,11 +80,11 @@ class A2Cagent:
                 else:
                     current_state = next_state
                     self.total_steps += 1
-                    self.check += reward
+                    self.check_model_improved += reward
             # for any episode where the reward is higher
             # we copy the actor network weights to the target network
-            if self.check > self.best_max:
-                self.best_max = self.check
+            if self.check_model_improved > self.best_max:
+                self.best_max = self.check_model_improved
                 self.best_network.set_weights(self.A2C_network.get_weights())
 
     def train_by_replay(self):
@@ -111,9 +111,10 @@ class A2Cagent:
         for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check, self.best_max))
+            print('Episode: {}  eward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved,
+                                                                          self.best_max))
             print('-' * 64)
-            self.check = 0
+            self.check_model_improved = 0
 
             for step in range(self.steps):
                 action_values, _ = self.best_network.predict(
@@ -129,4 +130,4 @@ class A2Cagent:
                     break
                 else:
                     current_state = next_state
-                    self.check += 1
+                    self.check_model_improved += 1

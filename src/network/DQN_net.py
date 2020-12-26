@@ -14,7 +14,7 @@ class DQNNet:
 
         self.net_model = None
 
-        self.optimizer = config.optimizer
+        self.optimizer = config.network_optimizer
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
