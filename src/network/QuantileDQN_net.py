@@ -73,18 +73,23 @@ class QuantileNet:
         :param y_predict: predicted label, quantiles, [batch_size, num_quantiles]
         :return: quantile huber loss between the target quantiles and the quantiles
         """
-        diff = y_true - y_predict
+        batch_loss = []
+        for each_batch in range(self.config.batch_size):
+            each_transition_sample_loss = 0
+            for i in range(self.num_quantiles):
+                diff = y_true[each_batch] - y_predict[each_batch, i]
 
-        target_loss = tf.reduce_mean(
-            (self.huber_loss(diff) *
-             tf.abs(self.cum_density - tf.cast(diff < 0, dtype=tf.float32))),
-            axis=0)
+                # calculate the expected value over j
+                target_loss = tf.reduce_mean(
+                    (self.huber_loss(diff) *
+                     tf.abs(self.cum_density[i] - tf.cast(diff < 0, dtype=tf.float32))))
 
-        regularization_loss = tf.add_n(self.net_model.losses)
+                # sum over i in algorithm 1
+                each_transition_sample_loss += target_loss
 
-        total_loss = tf.add_n([tf.reduce_sum(target_loss), regularization_loss])
-
-        return total_loss
+            # get batch loss size=(32, 1)
+            batch_loss.append(each_transition_sample_loss)
+        return tf.reduce_mean(batch_loss)
 
     def huber_loss(self, item):
         return tf.where(

@@ -75,10 +75,11 @@ class ExpectileNet:
         :param y_predict: predicted label, expectile_predict (batch_size, number of expectiles)
         :return: expectile loss between the target expectile and the predicted expectile
         """
-        loss_val = 0
+        batch_loss = []
         for i in range(self.batch_size):
             expectile_predict = y_predict[i]
             z = y_true[i]
+            loss_val = 0
 
             for k in range(self.num_expectiles):
                 diff = z - expectile_predict[k]
@@ -86,10 +87,10 @@ class ExpectileNet:
 
                 er_loss = tf.reduce_mean(tf.where(diff > 0, self.cum_density[k] * diff_square,
                                                   (1 - self.cum_density[k]) * diff_square))
-                # sum over all kth statistics, and sum over the entire batch
+                # sum over all kth statistics
                 loss_val += er_loss
 
-        regularization_loss = tf.add_n(self.net_model.losses)
-        total_loss = tf.add_n([loss_val, regularization_loss])
+            # get batch loss size=(32, 1)
+            batch_loss.append(loss_val)
 
-        return total_loss
+        return tf.reduce_mean(batch_loss)
