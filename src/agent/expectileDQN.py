@@ -15,7 +15,7 @@ class ExpectileDQNAgent:
         self.input_dim = config.input_dim  # neural network input dimension
 
         self.num_expectiles = config.num_expectiles
-        self.expectile_mean_idx = int(config.num_expectiles / 2) + 1
+        self.expectile_mean_idx = int(config.num_expectiles / 2)
 
         self.envs = None
         self.actor_network = self.base_network.nn_model()

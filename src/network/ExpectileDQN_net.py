@@ -12,6 +12,7 @@ class ExpectileNet:
         self.action_dim = config.action_dim
         self.num_expectiles = config.num_expectiles
         self.output_dim = self.action_dim * self.num_expectiles
+        self.expectile_mean_idx = int(config.num_expectiles / 2)
 
         self.batch_size = self.config.batch_size
 
@@ -23,23 +24,15 @@ class ExpectileNet:
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
-
-        output_layers = Dense(units=self.output_dim,
-                              use_bias=False,
-                              input_shape=self.input_dim,  # input
-                              activation='linear',
-                              kernel_initializer=self.config.weights_initializer,
-                              activity_regularizer=self.config.activity_regularizer,
-                              name='fully_connect'
-                              )(input_layer)
+        output_layers = Dense(units=24, activation="relu", name='hidden_layer_1')(input_layer)
+        output_layers = Dense(units=self.output_dim, activation="linear", name='output_layer')(output_layers)
 
         # processing layers ==> reshape, no training variables
         output_layers = Reshape((self.action_dim, self.num_expectiles))(output_layers)
 
         # get the action values <=> mid expectile
         # tf.cast is to cast the action values to int32
-        action_values = output_layers[:, :, int(self.num_expectiles / 2) + 1]
-
+        action_values = output_layers[:, :, self.expectile_mean_idx]
         action = tf.cast(tf.argmax(action_values, axis=1), dtype=tf.int32)
 
         # to get the optimal action expectiles
@@ -87,10 +80,10 @@ class ExpectileNet:
 
                 er_loss = tf.reduce_mean(tf.where(diff > 0, self.cum_density[k] * diff_square,
                                                   (1 - self.cum_density[k]) * diff_square))
-                # sum over all kth statistics
+                # sum over all k statistics
                 loss_val += er_loss
 
-            # get batch loss size=(32, 1)
+            # get batch loss size=(1, 32)
             batch_loss.append(loss_val)
 
         return tf.reduce_mean(batch_loss)

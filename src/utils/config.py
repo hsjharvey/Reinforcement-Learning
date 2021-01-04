@@ -22,10 +22,10 @@ class Config:
         self.stop_explore = 100
 
         # neural network parameters
-        self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01, seed=None)
+        # self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=1e-2, seed=None)
+        # self.activity_regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
         self.network_optimizer = tf.keras.optimizers.Adam(lr=1e-4,  # learning rate
                                                           clipnorm=1.0)  # gradient clipping
-        self.activity_regularizer = tf.keras.regularizers.l1_l2(1e-3, 1e-3)
         self.keras_checkpoint = [tf.keras.callbacks.ModelCheckpoint(
             filepath='./results/saved_network_models/harvey.model',
             save_weights_only=True, mode='auto'),
@@ -43,8 +43,8 @@ class Config:
         self.huber_loss_threshold = 1.0
 
         # Expetile ER-DQN parameters
-        self.num_expectiles = 11
-        self.z_val_limits = (-10, 10)
+        self.num_expectiles = 5
+        self.z_val_limits = (0, 10)
         self.imputation_distribution_bounds = tuple(self.z_val_limits for _ in range(self.num_expectiles))
         self.imputation_method = "root"  # root or minimization
 

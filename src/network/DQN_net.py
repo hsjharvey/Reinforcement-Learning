@@ -18,15 +18,9 @@ class DQNNet:
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
-
-        output_layers = Dense(units=self.output_dim,
-                              use_bias=False,
-                              input_shape=self.input_dim,  # input
-                              kernel_initializer=self.config.weights_initializer,
-                              activation='linear',
-                              activity_regularizer=self.config.activity_regularizer,
-                              name='fully_connect'
-                              )(input_layer)
+        output_layers = Dense(units=24, activation="relu", name='hidden_layer_1')(input_layer)
+        output_layers = Dense(units=24, activation="relu", name='hidden_layer_2')(output_layers)
+        output_layers = Dense(units=self.output_dim, activation='linear', name='output_layer')(output_layers)
 
         # into probabilities
         output_layers = Softmax(axis=-1)(output_layers)
