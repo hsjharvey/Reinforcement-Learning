@@ -15,6 +15,7 @@ class ExpectileDQNAgent:
         self.input_dim = config.input_dim  # neural network input dimension
 
         self.num_expectiles = config.num_expectiles
+        self.num_imputed_samples = config.num_imputed_samples
         self.expectile_mean_idx = int(config.num_expectiles / 2)
 
         self.envs = None
@@ -130,9 +131,9 @@ class ExpectileDQNAgent:
         z = self.imputation_strategy(expectile_next)
 
         # match the rewards and the discount rates from the memory to the same size as the expectile_next
-        rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.num_expectiles))
+        rewards = np.tile(rewards.reshape(self.batch_size, 1), (1, self.num_imputed_samples))
         discount_rate = np.tile(self.config.discount_rate * (1 - terminals).reshape(self.batch_size, 1),
-                                (1, self.num_expectiles))
+                                (1, self.num_imputed_samples))
 
         # TD update
         z = rewards + discount_rate * z
@@ -172,19 +173,25 @@ class ExpectileDQNAgent:
                     self.check_model_improved += 1
 
     def imputation_strategy(self, expectile_next_batch):
-        result_collection = np.zeros(shape=(self.batch_size, self.num_expectiles))
-        for idx in range(self.batch_size):
-            start_vals = np.linspace(self.config.z_val_limits[0], self.config.z_val_limits[1], self.num_expectiles)
+        result_collection = np.zeros(shape=(self.batch_size, self.num_imputed_samples))
+        start_vals = np.linspace(self.config.z_val_limits[0], self.config.z_val_limits[1], self.num_imputed_samples)
 
+        for idx in range(self.batch_size):
             if self.imputation_method == "minimization":
                 # To be discussed, I think this is pretty much problem-dependent
                 # The bounds here limit the possible options of z
-                # Having bounds could potentially prevent crazy z
+                # Having bounds could potentially avoid crazy z
                 bnds = self.config.imputation_distribution_bounds
                 optimization_results = minimize(self.minimize_objective_fc, args=(expectile_next_batch[idx, :]),
                                                 x0=start_vals, bounds=bnds, method="SLSQP")
             elif self.imputation_method == "root":
-                optimization_results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]), x0=start_vals)
+                # the default root method is "hybr", it requires the input shape of x to be the same as
+                # the output shape of the root results
+                # in this case, it means that the imputed sample size to be exactly the same
+                # as the number of expectiles
+                # to be discussed.....
+                optimization_results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]),
+                                            x0=start_vals, method="hybr")
 
             result_collection[idx, :] = optimization_results.x
         return result_collection

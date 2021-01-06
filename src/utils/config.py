@@ -43,10 +43,20 @@ class Config:
         self.huber_loss_threshold = 1.0
 
         # Expetile ER-DQN parameters
-        self.num_expectiles = 5
+        self.num_expectiles = 10
         self.z_val_limits = (0, 10)
-        self.imputation_distribution_bounds = tuple(self.z_val_limits for _ in range(self.num_expectiles))
+        self.num_imputed_samples = 10
+        self.imputation_distribution_bounds = tuple(self.z_val_limits for _ in range(self.num_imputed_samples))
         self.imputation_method = "root"  # root or minimization
+
+        # the default root method is "hybr", it requires the input shape of x to be the same as
+        # the output shape of the root results
+        # in this case, it means that the imputed sample size to be exactly the same
+        # as the number of expectiles
+        # this is also the assumption in the paper if you look closely at Algorithm 2 and appendix D.1
+        if self.imputation_method == "root":
+            assert self.num_expectiles == self.num_imputed_samples, \
+                "if you use root method, the number of imputed samples must be equal to the number of expectiles"
 
         # a2c parameters
         self.head_out_dim = 20
