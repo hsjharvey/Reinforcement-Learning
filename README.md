@@ -47,6 +47,9 @@ So far I've only tested all algorithms on [CartPole](https://github.com/openai/g
 * [An Analysis of Categorical Distributional Reinforcement Learning](https://arxiv.org/abs/1802.08163)
 * [Implicit Quantile Networks for Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
 * [A Comparative Analysis of Expected and Distributional Reinforcement Learning](https://arxiv.org/abs/1806.06923)
+* [Fully Parameterized Quantile Function for Distributional Reinforcement Learning](https://arxiv.org/abs/1911.02140)
+* [Non-crossing quantile regression for deep reinforcement learning](https://proceedings.neurips.cc//paper/2020/file/b6f8dc086b2d60c5856e4ff517060392-Paper.pdf)
+* [Distributional Reinforcement Learning with Maximum Mean Discrepancy](https://arxiv.org/abs/2007.12354)
 
 
 
