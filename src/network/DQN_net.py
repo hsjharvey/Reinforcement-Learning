@@ -18,27 +18,19 @@ class DQNNet:
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
-        output_layers = Dense(units=24, activation="relu", name='hidden_layer_1')(input_layer)
-        output_layers = Dense(units=24, activation="relu", name='hidden_layer_2')(output_layers)
-        output_layers = Dense(units=self.output_dim, activation='linear', name='output_layer')(output_layers)
-
-        # into probabilities
-        output_layers = Softmax(axis=-1)(output_layers)
-
-        # output the action with the highest probability
-        # note this is merely an optional output from the network
-        # the agent's choice depends on the policies
-        actorNet_output_argmax = tf.reduce_max(output_layers, axis=2, name='argmax')
+        output_layers = Dense(units=24, activation="linear", name='hidden_layer_1')(input_layer)
+        output_layers = Dense(units=24, activation="linear", name='hidden_layer_2')(output_layers)
+        output_layers = Dense(units=self.output_dim, activation='softmax', name='output_layer')(output_layers)
 
         self.net_model = tf.keras.models.Model(
             inputs=[input_layer],
-            outputs=[output_layers, actorNet_output_argmax]
+            outputs=[output_layers]
         )
 
         # we update the weights according to the loss of quantiles of optimal actions from both
         # action network and target network
         self.net_model.compile(
-            loss=[None, 'mean_squared_error'],  # apply loss function only to the second output
+            loss=['mean_squared_error'],  # apply loss function only to the second output
             optimizer=self.optimizer
         )
 

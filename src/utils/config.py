@@ -14,12 +14,12 @@ class Config:
 
         # general RL agent parameters
         self.batch_size = 32  # size of the memory buffer drawn for training and replay
-        self.replay_buffer_size = 100  # size of the memory buffer, must > batch size
+        self.replay_buffer_size = 500  # size of the memory buffer, must > batch size
         assert self.replay_buffer_size >= self.batch_size
-        self.discount_rate = 0.99
+        self.discount_rate = 0.9
 
         # e-greedy algorithm
-        self.stop_explore = 100
+        self.stop_explore = 50
 
         # neural network parameters
         # self.weights_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=1e-2, seed=None)
@@ -29,7 +29,6 @@ class Config:
         self.keras_checkpoint = [tf.keras.callbacks.ModelCheckpoint(
             filepath='./results/saved_network_models/harvey.model',
             save_weights_only=True, mode='auto'),
-            tf.keras.callbacks.TensorBoard(log_dir='./results/logs'),
             tf.keras.callbacks.EarlyStopping(patience=10, monitor='loss'),
         ]
 

@@ -80,9 +80,9 @@ class ExpectileDQNAgent:
                 # when we collect certain number of batches, perform replay and
                 # update the weights in the actor network (Backpropagation)
                 # reset the replay buffer
-                if len(list(self.replay_buffer)) == self.replay_buffer_size:
+                if len(self.replay_buffer) == self.replay_buffer_size:
                     self.train_by_replay()
-                    self.replay_buffer = deque()
+                    self.replay_buffer.clear()
 
                 # if episode is finished, break the inner loop
                 # otherwise, continue

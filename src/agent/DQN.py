@@ -52,7 +52,7 @@ class DQNAgent:
             for step in range(self.steps):
                 # generate action values from the actor network
                 # size = [1, 2]
-                action_values, _ = self.actor_network.predict(
+                action_values = self.actor_network.predict(
                     np.array(current_state).reshape((1, self.input_dim[0], self.input_dim[1])))
 
                 action = policies.epsilon_greedy(action_values=action_values.reshape(self.config.action_dim),
@@ -69,9 +69,9 @@ class DQNAgent:
                 # when we collect certain number of batches, perform replay and
                 # update the weights in the actor network (Backpropagation)
                 # reset the replay buffer
-                if len(list(self.replay_buffer)) == self.replay_buffer_size:
+                if len(self.replay_buffer) == self.replay_buffer_size:
                     self.train_by_replay()
-                    self.replay_buffer = deque()
+                    self.replay_buffer.clear()
 
                 # if episode is finished, break the inner loop
                 # otherwise, continue
@@ -100,8 +100,8 @@ class DQNAgent:
             replay_fn.uniform_random_replay(self.replay_buffer, self.batch_size)
 
         # step 2: get the optimal action values for the next state
-        action_values, _ = self.target_network.predict(next_states)
-        action_values_next = np.max(action_values, axis=2)
+        action_values_next = self.target_network.predict(next_states)
+        action_values_next = np.max(action_values_next, axis=2)
 
         rewards = rewards.reshape(action_values_next.shape)
         terminals = terminals.reshape((action_values_next.shape))
@@ -119,7 +119,8 @@ class DQNAgent:
         for each_ep in range(self.config.evaluate_episodes):
             current_state = self.envs.reset()
 
-            print('Episode: {}  Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved, self.best_max))
+            print('Episode: {} Reward: {} Training_Max_Reward: {}'.format(each_ep, self.check_model_improved,
+                                                                          self.best_max))
             print('-' * 64)
             self.check_model_improved = 0
 

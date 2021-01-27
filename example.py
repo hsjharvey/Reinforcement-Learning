@@ -70,8 +70,8 @@ def run_A2C_example(game):
 if __name__ == '__main__':
     game = 'CartPole-v0'
 
-    # run_DQN_example(game)
+    run_DQN_example(game)
     # run_CategoricalDQN_example(game)
     # run_QuantileDQN_example(game)
-    run_ExpectileDQN_example(game)
+    # run_ExpectileDQN_example(game)
     # run_A2C_example(game)
