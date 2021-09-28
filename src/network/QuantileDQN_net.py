@@ -17,8 +17,12 @@ class QuantileNet:
         self.net_model = None
 
         self.k = config.huber_loss_threshold
-
+        # quantiles, e.g. [0.125, 0.375, 0.625, 0.875]
         self.cum_density = (2 * np.arange(config.num_quantiles) + 1) / (2.0 * config.num_quantiles)
+        # append r_0 = 0, [0.   , 0.125, 0.375, 0.625, 0.875]
+        temp = np.sort(np.append(self.cum_density, 0))
+        # calculate r_hat [0.0625, 0.25, 0.5, 0.75], see lemma 2 in the original paper.
+        self.r_hat = np.array([(temp[j] + temp[j - 1]) / 2 for j in range(1, temp.shape[0])])
 
     def nn_model(self):
         input_layer = Input(shape=self.input_dim, name='state_tensor_input')
@@ -62,7 +66,8 @@ class QuantileNet:
     def quantile_huber_loss(self, y_true, y_predict):
         """
         The loss function that is passed to the network
-        :param y_true: True label, quantiles_next, [batch_size, num_quantiles]
+        see algorithm 1 in the original paper for more details
+        :param y_true: true label, quantiles_next, [batch_size, num_quantiles]
         :param y_predict: predicted label, quantiles, [batch_size, num_quantiles]
         :return: quantile huber loss between the target quantiles and the quantiles
         """
@@ -75,7 +80,7 @@ class QuantileNet:
                 # calculate the expected value over j
                 target_loss = tf.reduce_mean(
                     (self.huber_loss(diff) *
-                     tf.abs(self.cum_density[i] - tf.cast(diff < 0, dtype=tf.float32))))
+                     tf.abs(self.r_hat[i] - tf.cast(diff < 0, dtype=tf.float32))))
 
                 # sum over i in algorithm 1
                 each_transition_sample_loss += target_loss
@@ -84,9 +89,13 @@ class QuantileNet:
             batch_loss.append(each_transition_sample_loss)
         return tf.reduce_mean(batch_loss)
 
-    def huber_loss(self, item):
+    def huber_loss(self, mu):
+        """
+        equation 10 of the original paper
+        :return:
+        """
         return tf.where(
-            tf.abs(item) < self.k,
-            0.5 * tf.square(item),
-            self.k * (tf.abs(item) - 0.5 * self.k)
+            tf.abs(mu) < self.k,
+            0.5 * tf.square(mu),
+            self.k * (tf.abs(mu) - 0.5 * self.k)
         )
