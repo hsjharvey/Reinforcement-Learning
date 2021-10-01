@@ -3,9 +3,6 @@ A practice module of some RL algorithms, implemented in
 [Tensorflow Keras](https://www.tensorflow.org/guide/keras) 
 and [OpenAI gym](https://github.com/openai/gym) framework. 
 
-## Updates:
-- 07/01/2021:
-    - Notes on distributional reinforcement learning (categorical, quantile and expectile) are done. see [PDF](./summary_on_distributional_RL.pdf).
 
 ## General:
 - I implement RL algorithms in this repo to better understand them. 
