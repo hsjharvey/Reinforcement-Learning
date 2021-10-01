@@ -187,9 +187,8 @@ class ExpectileDQNAgent:
             elif self.imputation_method == "root":
                 # the default root method is "hybr", it requires the input shape of x to be the same as
                 # the output shape of the root results
-                # in this case, it means that the imputed sample size to be exactly the same
+                # in this case, it means that the imputed sample size is required to be exactly the same
                 # as the number of expectiles
-                # to be discussed.....
                 optimization_results = root(self.root_objective_fc, args=(expectile_next_batch[idx, :]),
                                             x0=start_vals, method="hybr")
 

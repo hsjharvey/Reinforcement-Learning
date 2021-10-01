@@ -78,8 +78,9 @@ class ExpectileNet:
                 diff = z - expectile_predict[k]
                 diff_square = tf.square(diff)
 
-                er_loss = tf.reduce_mean(tf.where(diff > 0, self.cum_density[k] * diff_square,
-                                                  (1 - self.cum_density[k]) * diff_square))
+                er_loss = tf.reduce_mean(tf.where(diff > 0,
+                                                  self.cum_density[k] * diff_square,  # tau * (Z-q)^2
+                                                  (1 - self.cum_density[k]) * diff_square))  # (1-tau) * (Z-q)^2
                 # sum over all k statistics
                 loss_val += er_loss
 
