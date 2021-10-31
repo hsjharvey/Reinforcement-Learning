@@ -5,15 +5,8 @@ and [OpenAI gym](https://github.com/openai/gym) framework.
 
 
 ## General:
-- I implement RL algorithms in this repo to better understand them. 
-- I tend to focus on the RL part rather than the network structure. Therefore, the network structure of the algorithms in this report is pretty simple.
-- My own research is related to distributional RL so I spend most of my effort implementing distributional RL algorithms. 
-- Implementation of neural networks has improved/changed dramatically over the past three years. Unfortunately I was not able to keep up with the trends since my own research did not focus on the network structure. For sure some code are not efficient, everytime there is a major shift in the packages (OpenAI gym, tensorflow), I merely change the code so that they can work.
+- I tend to focus on the RL part rather than the network structure; the network structure of the algorithms in this report is pretty simple.
 - I hope the generic algorithm structure helps.
-
- 
-## Environment:
-So far I've only tested all algorithms on [CartPole](https://github.com/openai/gym/wiki/CartPole-v0).
 
  
 ## Algorithms:
